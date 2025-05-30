@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Pháo Hoa & WIP Nâng Cao)</title>
+    <title>Bảng Kanban Task (Tailwind CSS - Cập Nhật Sửa/Chi Tiết)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -62,15 +62,14 @@
         #task-detail-bottom-sheet-overlay { transition: opacity 0.3s ease-in-out; }
         #task-detail-bottom-sheet { transition: transform 0.3s ease-out; }
 
-        /* Confetti Canvas */
         #confetti-canvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Make sure it doesn't block interactions */
-            z-index: 2000; /* Above other content but below modals if needed */
+            pointer-events: none;
+            z-index: 2000;
         }
 
     </style>
@@ -358,7 +357,7 @@
       // SVG Icons
       const iconPinOutline = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25L7.5 16.5V3.75m9 0H7.5A2.25 2.25 0 005.25 6v10.5A2.25 2.25 0 007.5 18.75h9A2.25 2.25 0 0018.75 16.5V6A2.25 2.25 0 0016.5 3.75z" /></svg>`;
       const iconPinSolid = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0111.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 01-1.085.67L12 18.089l-7.165 3.583A.75.75 0 013.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93z" clip-rule="evenodd" /></svg>`;
-      const iconMoreVertical = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" /></svg>`;
+      const iconEditPencil = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>`;
       const iconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>`;
       const iconArrowRight = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>`;
       const iconCheck = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`;
@@ -556,7 +555,6 @@
               const countBadge = column.querySelector('.task-count-badge');
               const wipLimit = parseInt(column.dataset.wipLimit, 10);
               
-              // Calculate unblocked tasks for WIP limit check
               let unblockedTaskCountInColumn = 0;
               allTasks.forEach(task => {
                   if (task.status === status && !task.isBlocked) {
@@ -565,7 +563,7 @@
               });
 
               if (countBadge) {
-                countBadge.textContent = currentTaskCounts[status] || 0; // Total count for display
+                countBadge.textContent = currentTaskCounts[status] || 0; 
               }
               
               column.classList.remove('column-at-wip-limit'); 
@@ -620,11 +618,9 @@
           taskCard.className = `task-card bg-white border border-slate-200 rounded-md p-3 shadow hover:shadow-md transition-shadow flex flex-col relative border-l-4 border-priority-${taskData.priority || 'medium'}`;
           if (taskData.isPinned) taskCard.classList.add('task-pinned', '!border-amber-400', '!bg-amber-50');
           
-          // Apply general blocked class FIRST if task is blocked
           if (taskData.isBlocked) {
               taskCard.classList.add('blocked', '!bg-red-50', '!border-red-300', '!border-l-red-700');
           }
-
 
           taskCard.setAttribute('draggable', 'true');
           taskCard.dataset.id = taskData.id;
@@ -636,7 +632,7 @@
           const titleText = document.createElement('p');
           titleText.className = 'task-card-title-text text-sm font-semibold text-slate-800 flex-grow cursor-pointer line-clamp-2 leading-tight';
           titleText.textContent = taskData.title;
-          titleText.onclick = () => openEditModal(taskData); // Click title to edit
+          titleText.onclick = () => openBottomSheet(taskData); // CHANGED: Click title to open Bottom Sheet
           cardHeader.appendChild(titleText);
 
           const cardActions = document.createElement('div');
@@ -648,17 +644,17 @@
           pinButton.onclick = (e) => { e.stopPropagation(); togglePinTask(taskData); };
           cardActions.appendChild(pinButton);
 
-          const moreButton = document.createElement('button');
-          moreButton.className = 'p-1 rounded text-slate-400 hover:bg-slate-200 hover:text-slate-600';
-          moreButton.innerHTML = iconMoreVertical;
-          moreButton.title = "Xem chi tiết & Hành động";
-          moreButton.onclick = (e) => { e.stopPropagation(); openBottomSheet(taskData); };
-          cardActions.appendChild(moreButton);
+          const editButton = document.createElement('button'); // CHANGED: Was moreButton
+          editButton.className = 'p-1 rounded text-slate-400 hover:bg-slate-200 hover:text-slate-600';
+          editButton.innerHTML = iconEditPencil; // CHANGED: New edit icon
+          editButton.title = "Sửa công việc";
+          editButton.onclick = (e) => { e.stopPropagation(); openEditModal(taskData); }; // CHANGED: Click edit icon to open Edit Modal
+          cardActions.appendChild(editButton);
           cardHeader.appendChild(cardActions);
           taskCard.appendChild(cardHeader);
 
           // Description Snippet
-          if (taskData.description && taskData.description.trim() !== '' && taskData.description !== taskData.title) {
+          if (taskData.description && taskData.description.trim() !== '') {
             const descSnippet = document.createElement('p');
             descSnippet.className = 'task-card-description-snippet text-xs text-slate-600 mt-0.5 mb-1.5 line-clamp-2 leading-snug';
             descSnippet.textContent = taskData.description;
@@ -672,7 +668,6 @@
             blockedCardIndicator.innerHTML = `<svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12zm-1-5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm1-4a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>CHẶN`;
             taskCard.appendChild(blockedCardIndicator);
           }
-
 
           // Minimal Indicators (Assignee, Due Date, Priority)
           const minimalIndicators = document.createElement('div');
@@ -699,7 +694,6 @@
                   const diffTime = dueDateObj - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                   if (diffDays === 0) { dueDateIndicatorText = "Hôm nay"; dueDateClasses += ' bg-amber-100 text-amber-700';}
                   else if (diffDays === 1) { dueDateIndicatorText = "Ngày mai"; dueDateClasses += ' bg-amber-100 text-amber-700';}
-                  // else { dueDateIndicatorText = formatDateForDisplay(dueDate); } 
               }
               if (dueDateIndicatorText) {
                   const dueDateIndicator = document.createElement('span');
@@ -716,7 +710,6 @@
           if (minimalIndicators.hasChildNodes()) {
               taskCard.appendChild(minimalIndicators);
           }
-
 
           // Card Footer
           const cardFooter = document.createElement('div');
@@ -775,7 +768,7 @@
           if (!columnElement) { showAlert(`Lỗi: Không tìm thấy cột cho trạng thái "${newStatus}".`); return false; }
           
           const wipLimit = parseInt(columnElement.dataset.wipLimit, 10);
-          if (wipLimit !== -1 && newStatus !== oldStatus) { // Check WIP only when moving TO a limited column
+          if (wipLimit !== -1 && newStatus !== oldStatus) { 
             let unblockedTasksInTargetColumn = 0;
             allTasks.forEach(task => {
                 if (task.status === newStatus && !task.isBlocked) {
@@ -784,7 +777,6 @@
             });
 
             const taskBeingMoved = allTasks.find(t => t.id === taskId);
-            // Only count task being moved if it's not blocked itself
             const isTaskBeingMovedUnblocked = taskBeingMoved && !taskBeingMoved.isBlocked;
 
             if (isTaskBeingMovedUnblocked && unblockedTasksInTargetColumn >= wipLimit) {
@@ -808,7 +800,7 @@
               await updateDoc(taskRef, { status: newStatus, updatedAt: serverTimestamp(), isPinned: (newStatus === 'done' ? false : (taskToUpdate?.isPinned || false)) });
               
               if (newStatus === 'done' && oldStatus !== 'done') {
-                  triggerConfetti(); // Call confetti
+                  triggerConfetti(); 
               }
               return true;
           } catch (error) { console.error("Error updating task status:", error); showAlert("Lỗi cập nhật trạng thái task: " + error.message); return false; }
@@ -844,7 +836,7 @@
               
               let unblockedTasksInTargetColumn = 0;
               allTasks.forEach(task => {
-                  if (task.status === targetStatus && !task.isBlocked && task.id !== draggedTask.dataset.id) { // Exclude the task being dragged
+                  if (task.status === targetStatus && !task.isBlocked && task.id !== draggedTask.dataset.id) { 
                       unblockedTasksInTargetColumn++;
                   }
               });
@@ -939,10 +931,10 @@
               const container = column.querySelector('.tasks-container');
               container.innerHTML = ''; container.classList.remove('empty', 'border-2', 'border-dashed', 'border-slate-300', 'rounded-md', 'p-4', 'mt-2.5');
           });
-          currentTaskCounts = { todo: 0, inprogress: 0, done: 0 }; // Recalculate based on filtered tasks
+          currentTaskCounts = { todo: 0, inprogress: 0, done: 0 }; 
           tasksToRender.forEach((taskData) => {
               if (!taskData.status || !currentTaskCounts.hasOwnProperty(taskData.status)) taskData.status = 'todo';
-              currentTaskCounts[taskData.status]++; // This now counts filtered tasks for THIS render pass
+              currentTaskCounts[taskData.status]++; 
               const taskCardElement = createTaskCard(taskData);
               const columnContainer = document.getElementById(taskData.status)?.querySelector('.tasks-container');
               if (columnContainer) columnContainer.appendChild(taskCardElement);
@@ -954,14 +946,14 @@
           kanbanColumns.forEach(column => {
               const status = column.dataset.status;
               const container = column.querySelector('.tasks-container');
-              if (currentTaskCounts[status] === 0) { // Check if this column is empty *after filtering*
+              if (currentTaskCounts[status] === 0) { 
                   let message;
                   const columnTitleElement = column.querySelector('.column-header h2');
                   const tabButton = document.getElementById(`tab-${status}`);
                   let columnDisplayName = status;
-                  if (columnTitleElement && columnTitleElement.offsetParent !== null) {
+                  if (columnTitleElement && columnTitleElement.offsetParent !== null) { 
                       columnDisplayName = columnTitleElement.textContent.trim();
-                  } else if (tabButton) {
+                  } else if (tabButton) { 
                      columnDisplayName = Array.from(tabButton.childNodes).filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent.trim()).join('') || status;
                   }
                   if (hasActiveFilters) message = `Không có công việc nào khớp bộ lọc.`;
@@ -1024,24 +1016,24 @@
       }
 
       function ConfettiParticle(x, y) {
-          this.x = x; this.y = y; this.size = Math.random() * 6 + 4; // Slightly larger
-          this.speedX = Math.random() * 4 - 2; // Slower horizontal
-          this.speedY = Math.random() * -10 - 4; // Slower initial upward
-          const colors = ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#8b5cf6', '#6366f1', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316']; // Tailwind v3 palette inspired
+          this.x = x; this.y = y; this.size = Math.random() * 6 + 4; 
+          this.speedX = Math.random() * 4 - 2; 
+          this.speedY = Math.random() * -10 - 4; 
+          const colors = ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#8b5cf6', '#6366f1', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316']; 
           this.color = colors[Math.floor(Math.random() * colors.length)];
           this.opacity = 1; this.angle = Math.random() * Math.PI * 2;
-          this.spin = Math.random() * 0.3 - 0.15; this.gravity = 0.15; // Softer gravity
+          this.spin = Math.random() * 0.3 - 0.15; this.gravity = 0.15; 
           this.drag = 0.985;
       }
       ConfettiParticle.prototype.update = function() {
           this.speedY += this.gravity; this.speedX *= this.drag; this.x += this.speedX; this.y += this.speedY;
-          this.angle += this.spin; this.opacity -= 0.008; // Slower fade
+          this.angle += this.spin; this.opacity -= 0.008; 
       };
       ConfettiParticle.prototype.draw = function() {
           confettiCtx.save(); confettiCtx.globalAlpha = this.opacity;
           confettiCtx.translate(this.x + this.size / 2, this.y + this.size / 2);
           confettiCtx.rotate(this.angle); confettiCtx.fillStyle = this.color;
-          confettiCtx.fillRect(-this.size /2, -this.size /2, this.size, this.size * 1.5); // Rectangles
+          confettiCtx.fillRect(-this.size /2, -this.size /2, this.size, this.size * 1.5); 
           confettiCtx.restore();
       };
       function animateConfetti() {
@@ -1049,7 +1041,7 @@
           let stillAlive = false;
           for (let i = confettiParticles.length - 1; i >= 0; i--) {
               const p = confettiParticles[i]; p.update(); p.draw();
-              if (p.opacity > 0 && p.y < confettiCanvas.height + p.size) stillAlive = true; // Check if visible or will be
+              if (p.opacity > 0 && p.y < confettiCanvas.height + p.size) stillAlive = true; 
               else confettiParticles.splice(i, 1);
           }
           if (stillAlive) confettiAnimationId = requestAnimationFrame(animateConfetti);
@@ -1059,18 +1051,18 @@
           }
       }
       function triggerConfetti() {
-          if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId); // Clear previous animation
-          confettiParticles.length = 0; // Clear old particles
-          const particleCount = 100; // Number of particles
+          if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId); 
+          confettiParticles.length = 0; 
+          const particleCount = 100; 
           const centerX = confettiCanvas.width / 2;
-          const centerY = confettiCanvas.height / 3; // Start higher
+          const centerY = confettiCanvas.height / 3; 
           for (let i = 0; i < particleCount; i++) {
               confettiParticles.push(new ConfettiParticle(centerX, centerY));
           }
           animateConfetti();
       }
       window.addEventListener('resize', resizeConfettiCanvas);
-      resizeConfettiCanvas(); // Initial size
+      resizeConfettiCanvas(); 
 
 
       const q = query(collection(db, TASKS_COLLECTION));
