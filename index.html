@@ -3,603 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Cập Nhật Thẻ & Sửa)</title>
+    <title>Bảng Kanban Task (Tailwind CSS - Đã Sửa)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            background-color: #f0f2f5;
-            color: #333;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            line-height: 1.6;
-            overscroll-behavior: none;
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none; 
         }
+        .tasks-container::-webkit-scrollbar, #archived-tasks-list::-webkit-scrollbar, #task-detail-bottom-sheet::-webkit-scrollbar {
+            width: 8px;
+        }
+        .tasks-container::-webkit-scrollbar-track, #archived-tasks-list::-webkit-scrollbar-track, #task-detail-bottom-sheet::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .tasks-container::-webkit-scrollbar-thumb, #archived-tasks-list::-webkit-scrollbar-thumb, #task-detail-bottom-sheet::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* Tailwind gray-400 */
+            border-radius: 10px;
+        }
+        .tasks-container::-webkit-scrollbar-thumb:hover, #archived-tasks-list::-webkit-scrollbar-thumb:hover, #task-detail-bottom-sheet::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af; /* Tailwind gray-500 */
+        }
+        .line-clamp-1, .line-clamp-2 {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+        }
+        .line-clamp-1 { -webkit-line-clamp: 1; }
+        .line-clamp-2 { -webkit-line-clamp: 2; }
 
-        .app-container {
-            width: 100%;
-            max-width: 1400px;
-            margin-bottom: 20px;
-        }
-
-        #app-main-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #app-main-header h1 {
-            color: #1890ff;
-            font-weight: 600;
-            font-size: 1.75rem;
-            margin: 0;
-        }
-
-        .actions-bar-container {
-            background-color: #fff;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        .actions-bar-container button {
-            padding: 10px 18px; color: white; border: none; border-radius: 6px;
-            cursor: pointer; font-size: 0.9rem; font-weight: 500;
-            transition: background-color 0.3s ease; display: flex; align-items: center;
-        }
-        .actions-bar-container button .icon { margin-right: 8px; }
-        #toggle-filter-bar-btn { background-color: #52c41a; }
-        #toggle-filter-bar-btn:hover { background-color: #389e0d; }
-        #view-archived-btn { background-color: #722ed1; }
-        #view-archived-btn:hover { background-color: #531dab; }
-
-        .filter-bar {
-            background-color: #fff; padding: 20px; border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); margin-bottom: 30px;
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px; align-items: center; overflow: hidden; max-height: 0;
-            opacity: 0; transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out, margin-bottom 0.5s ease-in-out;
-            padding-top: 0; padding-bottom: 0; margin-bottom: 0;
-        }
-        .filter-bar.filter-bar-visible {
-            max-height: 1000px; opacity: 1; padding-top: 20px;
-            padding-bottom: 20px; margin-bottom: 30px;
-        }
-        .filter-bar .form-group { display: flex; flex-direction: column; }
-        .filter-bar label { font-size: 0.85rem; color: #595959; margin-bottom: 5px; }
-        .filter-bar input[type="text"], .filter-bar select {
-            padding: 10px; border: 1px solid #d9d9d9; border-radius: 6px;
-            font-size: 0.95rem; width: 100%; box-sizing: border-box;
-        }
-        .filter-bar input[type="text"]:focus, .filter-bar select:focus {
-            border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2); outline: none;
-        }
-        .filter-bar .actions { grid-column: 1 / -1; display: flex; gap: 10px; justify-content: flex-end; }
-         @media (min-width: 992px) { .filter-bar .actions { grid-column: auto; grid-row: 1; align-self: end; } }
-        .filter-bar button {
-            padding: 10px 15px; background-color: #1890ff; color: white;
-            border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem;
-            font-weight: 500; transition: background-color 0.3s ease;
-        }
-        .filter-bar button.clear-filter-btn { background-color: #ff4d4f; }
-        .filter-bar button.clear-filter-btn:hover { background-color: #f5222d; }
-        .filter-bar button:hover { background-color: #40a9ff; }
-
-        .fab-add-task {
-            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
-            background-color: #1890ff; color: white; border: none; border-radius: 50%;
-            font-size: 28px; line-height: 60px; text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease; z-index: 999;
-        }
-        .fab-add-task:hover { background-color: #40a9ff; transform: scale(1.1); }
-
-        #kanban-mobile-tabs {
-            display: none; background-color: #fff; border-bottom: 1px solid #e2e8f0;
-            margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .mobile-tab-button {
-            flex-grow: 1; text-align: center; padding: 12px 8px;
-            font-size: 0.875rem; font-weight: 500; cursor: pointer;
-            border-bottom: 3px solid transparent; color: #595959;
-            transition: color 0.2s ease, border-color 0.2s ease;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .mobile-tab-button .icon { margin-right: 6px; width: 16px; height: 16px; }
-        .mobile-tab-button.active-tab { border-bottom-color: #1890ff; color: #1890ff; }
-        .mobile-tab-button#tab-todo.active-tab { border-bottom-color: #eb2f96; color: #eb2f96; }
-        .mobile-tab-button#tab-inprogress.active-tab { border-bottom-color: #faad14; color: #faad14; }
-        .mobile-tab-button#tab-done.active-tab { border-bottom-color: #52c41a; color: #52c41a; }
-
-        .kanban-board {
-            display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start;
-        }
-        .kanban-column {
-            flex: 1; min-width: 320px;
-            border-radius: 8px; padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column;
-            transition: background-color 0.3s ease, border 0.3s ease;
-        }
-        .kanban-column#todo { background-color: #fff0f6; }
-        .kanban-column#inprogress { background-color: #fffbe6; }
-        .kanban-column#done { background-color: #f6ffed; }
-
-        .kanban-column .column-header {
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
-        .kanban-column .column-header .title-group {
-            display: flex; align-items: center; font-size: 1.15rem;
-            font-weight: 600;
-        }
-        .kanban-column .column-header .column-icon { width: 18px; height: 18px; margin-right: 8px; }
-        .kanban-column#todo .column-header .title-group { color: #c91368; }
-        .kanban-column#inprogress .column-header .title-group { color: #d48806; }
-        .kanban-column#done .column-header .title-group { color: #389e0d; }
-        .kanban-column h2 { margin: 0; font-size: inherit; font-weight: inherit; color: inherit; border-bottom: none; padding-bottom: 0; }
-        .kanban-column .task-count-badge {
-            font-size: 0.75rem; color: #fff; padding: 2px 7px; border-radius: 10px;
-            font-weight: 500; min-width: 22px; text-align: center;
-        }
-        .kanban-column#todo .task-count-badge { background-color: #eb2f96; }
-        .kanban-column#inprogress .task-count-badge { background-color: #faad14; }
-        .kanban-column#done .task-count-badge { background-color: #52c41a; }
-
-        .tasks-container {
-            padding: 0; min-height: 200px;
-            flex-grow: 1;
-        }
-        .tasks-container.empty {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; color: #888; font-style: italic; min-height: 100px;
-            padding: 20px 0; border: 2px dashed #d1d5db; border-radius: 6px; margin-top: 10px;
-        }
-        .tasks-container.empty .empty-icon { width: 32px; height: 32px; margin-bottom: 8px; opacity: 0.5; }
-
-        /* Task Card Styling */
-        .task-card {
-            background-color: #ffffff; border: 1px solid #e0e0e0;
-            border-left-width: 4px;
-            border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; cursor: grab;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: all 0.2s ease; position: relative;
-            display: flex; flex-direction: column;
-        }
-        .task-card.task-pinned {
-            background-color: #fef9c3;
-            border: 1px solid #facc15;
-            border-left-width: 4px !important;
-        }
-
-        .task-card-header {
-            display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; /* Reduced margin */
-        }
-        .task-card-title-text {
-            font-size: 0.9rem; color: #1f2937; font-weight: 600;
-            margin: 0; flex-grow: 1; word-break: break-word;
-            overflow: hidden; text-overflow: ellipsis;
-            display: -webkit-box; -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical; line-height: 1.4;
-            max-height: calc(1.4em * 2); /* line-height * number of lines */
-            cursor: pointer; /* Make title clickable for edit */
-        }
-        .task-card-actions { display: flex; align-items: center; gap: 4px; margin-left: 8px; flex-shrink: 0;}
-        .task-card-actions button {
-            background: none; border: none; padding: 4px; cursor: pointer; color: #6b7280;
-            display: flex; align-items: center; justify-content: center;
-            width: 24px; height: 24px; border-radius: 4px;
-        }
-        .task-card-actions button:hover { background-color: #f3f4f6; color: #1f2937;}
-        .task-card-actions button svg { width: 16px; height: 16px; }
-        .task-card-actions .pin-btn.pinned svg { color: #f59e0b; }
-
-        .task-card-description-snippet {
-            font-size: 0.8rem; color: #4b5563; margin-top: 2px; margin-bottom: 6px;
-            white-space: normal; /* Allow wrapping */
-            overflow: hidden; text-overflow: ellipsis;
-            display: -webkit-box; -webkit-line-clamp: 2; /* Show max 2 lines for description snippet */
-            -webkit-box-orient: vertical; line-height: 1.3;
-            max-height: calc(1.3em * 2);
-        }
-
-
-        .task-card-minimal-indicators {
-            display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-            font-size: 0.75rem; color: #6b7280; margin-top: 6px;
-        }
-        .task-due-date-indicator {
-            font-size: 0.7rem; padding: 1px 5px; border-radius: 3px;
-        }
-        .task-due-date-indicator.due-overdue { background-color: #fee2e2; color: #991b1b; }
-        .task-due-date-indicator.due-soon { background-color: #fef3c7; color: #92400e; }
-        .priority-indicator-badge {
-            padding: 1px 5px; border-radius: 3px; font-weight: 500; font-size: 0.7rem;
-            color: white;
-        }
-        .priority-indicator-badge.prio-low { background-color: #22c55e; }
-        .priority-indicator-badge.prio-medium { background-color: #f59e0b; }
-        .priority-indicator-badge.prio-high { background-color: #ef4444; }
-
-
-        .task-card-footer {
-            margin-top: 8px; padding-top: 6px; border-top: 1px solid #f3f4f6;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .task-move-actions {
-            display: flex;
-            gap: 6px;
-        }
-        .task-move-actions button {
-            background-color: #f3f4f6;
-            border: 1px solid #e5e7eb;
-            padding: 5px;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            width: 28px; height: 28px;
-            border-radius: 6px;
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        .task-move-actions button svg { width: 14px; height: 14px; }
-        .task-move-actions button:hover { background-color: #e5e7eb; border-color: #d1d5db;}
-        .move-btn-todo { color: #ef4444; }
-        .move-btn-todo:hover { background-color: #fee2e2; border-color: #fca5a5; }
-        .move-btn-inprogress { color: #f59e0b; }
-        .move-btn-inprogress:hover { background-color: #fef3c7; border-color: #fcd34d; }
-        .move-btn-done { color: #22c55e; }
-        .move-btn-done:hover { background-color: #dcfce7; border-color: #86efac; }
-
-
-        .task-timestamp { font-size: 0.7rem; color: #9ca3af; }
-
-        .task-card.priority-low { border-left-color: #22c55e; }
-        .task-card.priority-medium { border-left-color: #f59e0b; }
-        .task-card.priority-high { border-left-color: #ef4444; }
-
-        .task-card.blocked { background-color: #fee2e2; border-left-color: #b91c1c !important; border-color: #fecaca; }
-        .blocked-icon-wrapper { display: flex; align-items: center; margin-top: 8px; }
-        .blocked-icon {
-            color: #a8071a; font-weight: bold; cursor: help; font-size: 0.8em; margin-right: 6px;
-            padding: 3px 6px; background-color: #ffccc7; border-radius: 4px; display: inline-flex; align-items: center;
-        }
-        .blocked-icon svg { width: 1em; height: 1em; margin-right: 4px; }
-        .block-reason-text { font-size: 0.8em; color: #8c8c8c; font-style: italic; }
-
-
-        .dragging { opacity: 0.4; border: 2px dashed #1890ff; }
-        .drag-over-column .tasks-container { background-color: rgba(230, 247, 255, 0.5) !important; border: 1px dashed #91d5ff; }
-        .wip-limit-exceeded .tasks-container { border: 2px dashed #ff4d4f !important; background-color: rgba(255, 241, 240, 0.5) !important; }
-        .column-at-wip-limit { border: 2px solid #ff7875; }
-        .column-at-wip-limit .column-header .task-count-badge::after {
-            content: " (WIP Limit!)"; color: #ff4d4f; font-weight: bold; font-size: 0.8em; margin-left: 5px;
-        }
-
-        /* --- Bottom Sheet Styling --- */
-        #task-detail-bottom-sheet-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            display: none;
-            z-index: 1040;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-        #task-detail-bottom-sheet-overlay.visible {
-            display: block;
-            opacity: 1;
-        }
-        #task-detail-bottom-sheet {
-            position: fixed;
-            bottom: 0; left: 0; right: 0;
-            background-color: #fff;
-            border-top-left-radius: 16px;
-            border-top-right-radius: 16px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
-            transform: translateY(100%);
-            transition: transform 0.3s ease-out;
-            z-index: 1050;
-            padding: 20px;
-            padding-bottom: 30px;
-            max-height: 80vh;
-            overflow-y: auto;
-            display: none;
-        }
-        #task-detail-bottom-sheet.visible {
-            display: block;
-            transform: translateY(0);
-        }
-        #task-detail-bottom-sheet h3 {
-            margin-top: 0; margin-bottom: 15px; font-size: 1.25rem; color: #1890ff;
-            border-bottom: 1px solid #f0f0f0; padding-bottom: 10px;
-        }
-        #task-detail-bottom-sheet .detail-item {
-            margin-bottom: 10px; font-size: 0.9rem;
-        }
-        #task-detail-bottom-sheet .detail-item strong {
-            color: #374151;
-            margin-right: 5px;
-        }
-        #task-detail-bottom-sheet .detail-item span,
-        #task-detail-bottom-sheet .detail-item p {
-            color: #4b5563;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        #task-detail-bottom-sheet .bs-tags-container {
-            display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px;
-        }
-        #task-detail-bottom-sheet .bs-tag {
-             background-color: #e0e7ff; color: #4338ca; padding: 2px 8px;
-            border-radius: 4px; font-size: 0.75rem; font-weight: 500;
-        }
-        #close-bottom-sheet-btn {
-            display: block;
-            width: calc(100% - 40px);
-            margin: 20px auto 0 auto;
-            padding: 12px;
-            background-color: #6b7280;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        #close-bottom-sheet-btn:hover {
-            background-color: #4b5563;
-        }
-
-
-        /* Modal Styling (common for Edit, Add Task, Archived Modals) */
-        .modal {
-            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-            overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;
-        }
-        .modal-content {
-            background-color: #fff; margin: auto; padding: 30px; border: none; border-radius: 8px;
-            width: 90%; max-width: 600px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            animation: modalFadeIn 0.3s ease-out;
-        }
-        #archived-tasks-modal .modal-content { max-width: 700px; }
-        #archived-tasks-list { max-height: 60vh; overflow-y: auto; }
-        #archived-tasks-list p { margin-top: 10px; text-align: center; color: #595959; }
-        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        .modal-content h3 {
-            margin-top: 0; color: #1890ff; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; font-weight: 600;
-        }
-        .modal-content label { display: block; margin-top: 15px; margin-bottom: 8px; font-weight: 500; color: #595959; }
-        .modal-content input[type="text"],
-        .modal-content input[type="date"],
-        .modal-content textarea,
-        .modal-content select {
-            width: 100%; box-sizing: border-box; padding: 12px; margin-bottom: 15px;
-            border: 1px solid #d9d9d9; border-radius: 6px; font-size: 1rem;
-        }
-        .modal-content input[type="text"]:focus,
-        .modal-content input[type="date"]:focus,
-        .modal-content textarea:focus,
-        .modal-content select:focus {
-            border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2); outline: none;
-        }
-        .modal-content input[type="checkbox"] {
-            margin-right: 8px; vertical-align: middle; width: auto; height: 1.1em; accent-color: #1890ff;
-        }
-        .modal-content .block-reason-container { margin-top: 10px; }
-        .modal-content textarea { min-height: 90px; resize: vertical; }
-        .modal-buttons { margin-top: 25px; text-align: right; }
-        .modal-buttons button {
-            padding: 12px 25px; border-radius: 6px; cursor: pointer; font-size: 1rem;
-            border: none; margin-left: 12px; font-weight: 500;
-            transition: background-color 0.3s, transform 0.1s;
-        }
-        .modal-buttons .save-btn { background-color: #1890ff; color: white; }
-        .modal-buttons .save-btn:hover { background-color: #40a9ff; }
-        .modal-buttons .cancel-btn { background-color: #f0f0f0; color: #595959; border: 1px solid #d9d9d9;}
-        .modal-buttons .cancel-btn:hover { background-color: #e0e0e0; }
-        .modal-buttons button:active { transform: scale(0.98); }
-        .close-modal-btn {
-            color: #aaa; float: right; font-size: 32px; font-weight: bold; line-height: 1;
-        }
-        .close-modal-btn:hover, .close-modal-btn:focus { color: #595959; text-decoration: none; cursor: pointer; }
-
-        @media (max-width: 767px) {
-            #kanban-mobile-tabs { display: flex; }
-            .kanban-board { display: block; }
-            .kanban-column {
-                width: 100%; margin-bottom: 0; display: none;
-                background-color: #fff; padding: 10px;
-            }
-            .kanban-column.active-mobile-column { display: flex; }
-            .kanban-column .column-header { display: none; }
-            .tasks-container.empty { background-color: transparent; border-width: 1px; }
-            .fab-add-task { bottom: 20px; right: 20px; width: 56px; height: 56px; font-size: 24px; line-height: 56px; }
-            .actions-bar-container { justify-content: space-between; }
-            #task-detail-bottom-sheet { max-height: 90vh; }
-        }
-        @media (min-width: 768px) and (max-width: 1250px) {
-            .kanban-board { justify-content: flex-start; gap: 10px; }
-            .kanban-column { width: calc(50% - 10px); margin-bottom: 20px; }
-        }
-        @media (max-width: 991px) {
-             .filter-bar .actions { grid-column: 1 / -1; justify-content: flex-start; }
-        }
+        .dragging { opacity: 0.5 !important; border: 2px dashed #3b82f6 !important; }
+        .drag-over-column .tasks-container { background-color: #eff6ff !important; border: 1px dashed #93c5fd !important; }
+        .wip-limit-exceeded .tasks-container { border: 2px dashed #ef4444 !important; background-color: #fee2e2 !important; }
     </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              'kanban-todo': '#fff0f6',
+              'kanban-todo-text': '#c91368',
+              'kanban-inprogress': '#fffbe6',
+              'kanban-inprogress-text': '#d48806',
+              'kanban-done': '#f6ffed',
+              'kanban-done-text': '#389e0d',
+              'priority-low': '#22c55e',
+              'priority-medium': '#f59e0b',
+              'priority-high': '#ef4444',
+            }
+          }
+        }
+      }
+    </script>
 </head>
-<body>
-    <div class="app-container">
-        <header id="app-main-header">
-            <h1>Ghi chú Kanban</h1>
+<body class="bg-slate-100 text-slate-800">
+    <div class="app-container max-w-screen-xl mx-auto p-4 md:p-6">
+        <header id="app-main-header" class="text-center mb-6">
+            <h1 class="text-3xl font-semibold text-sky-600">Ghi chú Kanban</h1>
         </header>
 
-        <div class="actions-bar-container">
-            <button id="view-archived-btn"><span class="icon">🗄️</span> Xem Lưu Trữ</button>
-            <button id="toggle-filter-bar-btn"><span class="icon">☰</span> <span id="toggle-filter-text">Hiện Bộ Lọc</span></button>
+        <div class="actions-bar-container bg-white p-3 md:p-4 rounded-lg shadow mb-6 flex justify-end items-center gap-3">
+            <button id="view-archived-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md flex items-center text-sm">
+                <span class="icon mr-2">🗄️</span> Xem Lưu Trữ
+            </button>
+            <button id="toggle-filter-bar-btn" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-md flex items-center text-sm">
+                <span class="icon mr-2">☰</span> <span id="toggle-filter-text">Hiện Bộ Lọc</span>
+            </button>
         </div>
 
-        <div class="filter-bar" id="filter-bar">
-            <div class="form-group"> <label for="search-term-input">Tìm theo tiêu đề:</label> <input type="text" id="search-term-input" placeholder="Nhập từ khóa..."> </div>
-            <div class="form-group"> <label for="filter-priority">Lọc theo ưu tiên:</label> <select id="filter-priority"> <option value="">Tất cả ưu tiên</option> <option value="high">Cao</option> <option value="medium">Trung bình</option> <option value="low">Thấp</option> </select> </div>
-            <div class="form-group"> <label for="filter-assignee">Lọc theo người thực hiện:</label> <select id="filter-assignee"> <option value="">Tất cả người thực hiện</option> </select> </div>
-            <div class="form-group"> <label for="filter-tag">Lọc theo thẻ:</label> <select id="filter-tag"> <option value="">Tất cả thẻ</option> </select> </div>
-            <div class="form-group"> <label for="filter-blocked">Lọc theo trạng thái chặn:</label> <select id="filter-blocked"> <option value="">Tất cả</option> <option value="yes">Bị chặn</option> <option value="no">Không bị chặn</option> </select> </div>
-            <div class="form-group"> <label for="filter-due-date">Lọc theo ngày đến hạn:</label> <select id="filter-due-date"> <option value="">Tất cả ngày</option> <option value="overdue">Quá hạn</option> <option value="today">Hôm nay</option> <option value="next7days">Trong 7 ngày tới</option> <option value="noduedate">Không có ngày đến hạn</option> </select> </div>
-            <div class="actions"> <button id="apply-filters-btn">Áp dụng lọc</button> <button id="clear-filters-btn" class="clear-filter-btn">Xóa bộ lọc</button> </div>
+        <div class="filter-bar bg-white p-5 rounded-lg shadow mb-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-end max-h-0 opacity-0 transition-all duration-500 ease-in-out" id="filter-bar">
+            <div class="form-group"> <label for="search-term-input" class="block text-sm font-medium text-slate-700 mb-1">Tìm theo tiêu đề:</label> <input type="text" id="search-term-input" placeholder="Nhập từ khóa..." class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> </div>
+            <div class="form-group"> <label for="filter-priority" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo ưu tiên:</label> <select id="filter-priority" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả ưu tiên</option> <option value="high">Cao</option> <option value="medium">Trung bình</option> <option value="low">Thấp</option> </select> </div>
+            <div class="form-group"> <label for="filter-assignee" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo người thực hiện:</label> <select id="filter-assignee" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả người thực hiện</option> </select> </div>
+            <div class="form-group"> <label for="filter-tag" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo thẻ:</label> <select id="filter-tag" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả thẻ</option> </select> </div>
+            <div class="form-group"> <label for="filter-blocked" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo trạng thái chặn:</label> <select id="filter-blocked" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả</option> <option value="yes">Bị chặn</option> <option value="no">Không bị chặn</option> </select> </div>
+            <div class="form-group"> <label for="filter-due-date" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo ngày đến hạn:</label> <select id="filter-due-date" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả ngày</option> <option value="overdue">Quá hạn</option> <option value="today">Hôm nay</option> <option value="next7days">Trong 7 ngày tới</option> <option value="noduedate">Không có ngày đến hạn</option> </select> </div>
+            <div class="actions xl:col-span-6 flex justify-end gap-3 mt-3"> <button id="apply-filters-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded-md text-sm">Áp dụng lọc</button> <button id="clear-filters-btn" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md text-sm">Xóa bộ lọc</button> </div>
         </div>
 
-        <div id="kanban-mobile-tabs">
-            <button class="mobile-tab-button active-tab" id="tab-todo" data-status="todo">
+        <div id="kanban-mobile-tabs" class="md:hidden flex bg-white border-b border-slate-200 mb-4 shadow-sm">
+            <button class="mobile-tab-button flex-1 text-center py-3 px-2 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors flex items-center justify-center gap-1.5" id="tab-todo" data-status="todo">
                 <span class="icon">📝</span>Cần làm
             </button>
-            <button class="mobile-tab-button" id="tab-inprogress" data-status="inprogress">
+            <button class="mobile-tab-button flex-1 text-center py-3 px-2 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors flex items-center justify-center gap-1.5" id="tab-inprogress" data-status="inprogress">
                 <span class="icon">⚙️</span>Đang làm
             </button>
-            <button class="mobile-tab-button" id="tab-done" data-status="done">
+            <button class="mobile-tab-button flex-1 text-center py-3 px-2 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors flex items-center justify-center gap-1.5" id="tab-done" data-status="done">
                 <span class="icon">✔️</span>Hoàn thành
             </button>
         </div>
 
-        <button id="fab-add-task" class="fab-add-task" title="Thêm công việc mới">+</button>
+        <button id="fab-add-task" class="fixed bottom-8 right-8 w-14 h-14 bg-sky-500 hover:bg-sky-600 text-white rounded-full text-3xl flex items-center justify-center shadow-lg z-50" title="Thêm công việc mới">+</button>
 
-        <div class="kanban-board">
-            <div class="kanban-column" id="todo" data-status="todo" data-wip-limit="-1">
-                <div class="column-header">
-                    <span class="title-group">
-                        <svg class="column-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5M8.25 12h7.5m-7.5 3.75h7.5M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+        <div class="kanban-board grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="kanban-column bg-kanban-todo rounded-lg p-4 shadow-md flex flex-col" id="todo" data-status="todo" data-wip-limit="-1">
+                <div class="column-header flex items-center justify-between mb-4 pb-3 border-b border-rose-200">
+                    <span class="title-group flex items-center text-lg font-semibold text-kanban-todo-text">
+                        <svg class="column-icon w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5M8.25 12h7.5m-7.5 3.75h7.5M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
                         <h2>Cần làm</h2>
                     </span>
-                    <span class="task-count-badge" id="todo-count">0</span>
+                    <span class="task-count-badge bg-kanban-todo-text text-white text-xs font-medium px-2.5 py-0.5 rounded-full" id="todo-count">0</span>
                 </div>
-                <div class="tasks-container"></div>
+                <div class="tasks-container flex-grow space-y-3 min-h-[200px]"></div>
             </div>
-            <div class="kanban-column" id="inprogress" data-status="inprogress" data-wip-limit="3">
-                 <div class="column-header">
-                    <span class="title-group">
-                        <svg class="column-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+            <div class="kanban-column bg-kanban-inprogress rounded-lg p-4 shadow-md flex flex-col" id="inprogress" data-status="inprogress" data-wip-limit="3">
+                 <div class="column-header flex items-center justify-between mb-4 pb-3 border-b border-amber-200">
+                    <span class="title-group flex items-center text-lg font-semibold text-kanban-inprogress-text">
+                        <svg class="column-icon w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
                         <h2>Đang làm</h2>
                     </span>
-                    <span class="task-count-badge" id="inprogress-count">0</span>
+                    <span class="task-count-badge bg-kanban-inprogress-text text-white text-xs font-medium px-2.5 py-0.5 rounded-full" id="inprogress-count">0</span>
                 </div>
-                <div class="tasks-container"></div>
+                <div class="tasks-container flex-grow space-y-3 min-h-[200px]"></div>
             </div>
-            <div class="kanban-column" id="done" data-status="done" data-wip-limit="-1">
-                 <div class="column-header">
-                    <span class="title-group">
-                        <svg class="column-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div class="kanban-column bg-kanban-done rounded-lg p-4 shadow-md flex flex-col" id="done" data-status="done" data-wip-limit="-1">
+                 <div class="column-header flex items-center justify-between mb-4 pb-3 border-b border-green-200">
+                    <span class="title-group flex items-center text-lg font-semibold text-kanban-done-text">
+                        <svg class="column-icon w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         <h2>Hoàn thành</h2>
                     </span>
-                    <span class="task-count-badge" id="done-count">0</span>
+                    <span class="task-count-badge bg-kanban-done-text text-white text-xs font-medium px-2.5 py-0.5 rounded-full" id="done-count">0</span>
                 </div>
-                <div class="tasks-container"></div>
+                <div class="tasks-container flex-grow space-y-3 min-h-[200px]"></div>
             </div>
         </div>
     </div>
 
-    <div id="add-task-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal-btn" id="close-add-task-modal-btn">&times;</span>
-            <h3>Thêm công việc mới</h3>
-            <label for="add-modal-task-title">Tiêu đề:</label>
-            <input type="text" id="add-modal-task-title" placeholder="Nhập tiêu đề...">
-            <label for="add-modal-task-desc">Mô tả:</label>
-            <textarea id="add-modal-task-desc" placeholder="Mô tả chi tiết (tùy chọn)..."></textarea>
-            <label for="add-modal-task-status">Trạng thái:</label>
-            <select id="add-modal-task-status">
-                <option value="todo">Cần làm</option>
-                <option value="inprogress">Đang làm</option>
-                <option value="done">Hoàn thành</option>
-            </select>
-            <label for="add-modal-task-priority">Độ ưu tiên:</label>
-            <select id="add-modal-task-priority">
-                <option value="medium">Trung bình</option>
-                <option value="high">Cao</option>
-                <option value="low">Thấp</option>
-            </select>
-            <label for="add-modal-task-due-date">Ngày đến hạn:</label>
-            <input type="date" id="add-modal-task-due-date">
-            <label for="add-modal-task-assignee">Người thực hiện:</label>
-            <input type="text" id="add-modal-task-assignee" placeholder="Tên người thực hiện...">
-            <label for="add-modal-task-tags">Thẻ (cách nhau bởi dấu phẩy):</label>
-            <input type="text" id="add-modal-task-tags" placeholder="Ví dụ: bug, feature, urgent">
-            <div class="modal-buttons">
-                <button type="button" class="cancel-btn" id="cancel-add-task-btn">Hủy</button>
-                <button type="button" class="save-btn" id="save-new-task-btn">Thêm Task</button>
+    <div id="add-task-modal" class="modal hidden fixed inset-0 bg-slate-900/70 items-center justify-center z-50 p-4">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200">
+                <h3 class="text-xl font-semibold text-sky-600">Thêm công việc mới</h3>
+                <button id="close-add-task-modal-btn" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+            </div>
+            <label for="add-modal-task-title" class="block text-sm font-medium text-slate-700 mb-1">Tiêu đề:</label>
+            <input type="text" id="add-modal-task-title" placeholder="Nhập tiêu đề..." class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm">
+            <label for="add-modal-task-desc" class="block text-sm font-medium text-slate-700 mb-1">Mô tả:</label>
+            <textarea id="add-modal-task-desc" placeholder="Mô tả chi tiết (tùy chọn)..." class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm min-h-[80px]"></textarea>
+            <label for="add-modal-task-status" class="block text-sm font-medium text-slate-700 mb-1">Trạng thái:</label>
+            <select id="add-modal-task-status" class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm"> <option value="todo">Cần làm</option> <option value="inprogress">Đang làm</option> <option value="done">Hoàn thành</option> </select>
+            <label for="add-modal-task-priority" class="block text-sm font-medium text-slate-700 mb-1">Độ ưu tiên:</label>
+            <select id="add-modal-task-priority" class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm"> <option value="medium">Trung bình</option> <option value="high">Cao</option> <option value="low">Thấp</option> </select>
+            <label for="add-modal-task-due-date" class="block text-sm font-medium text-slate-700 mb-1">Ngày đến hạn:</label>
+            <input type="date" id="add-modal-task-due-date" class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm">
+            <label for="add-modal-task-assignee" class="block text-sm font-medium text-slate-700 mb-1">Người thực hiện:</label>
+            <input type="text" id="add-modal-task-assignee" placeholder="Tên người thực hiện..." class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm">
+            <label for="add-modal-task-tags" class="block text-sm font-medium text-slate-700 mb-1">Thẻ (cách nhau bởi dấu phẩy):</label>
+            <input type="text" id="add-modal-task-tags" placeholder="Ví dụ: bug, feature, urgent" class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-4 text-sm">
+            <div class="modal-buttons flex justify-end gap-3 mt-5">
+                <button type="button" id="cancel-add-task-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2 px-4 rounded-md text-sm">Hủy</button>
+                <button type="button" id="save-new-task-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded-md text-sm">Thêm Task</button>
             </div>
         </div>
     </div>
 
-    <div id="edit-task-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal-btn" id="close-edit-modal-btn">&times;</span>
-            <h3>Chỉnh sửa công việc</h3>
+    <div id="edit-task-modal" class="modal hidden fixed inset-0 bg-slate-900/70 items-center justify-center z-50 p-4">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200">
+                <h3 class="text-xl font-semibold text-sky-600">Chỉnh sửa công việc</h3>
+                <button id="close-edit-modal-btn" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+            </div>
             <input type="hidden" id="edit-task-id">
-            <label for="edit-task-title">Tiêu đề:</label>
-            <input type="text" id="edit-task-title">
-            <label for="edit-task-description">Mô tả:</label>
-            <textarea id="edit-task-description"></textarea>
-            <label for="edit-task-status">Trạng thái:</label>
-            <select id="edit-task-status">
-                <option value="todo">Cần làm</option>
-                <option value="inprogress">Đang làm</option>
-                <option value="done">Hoàn thành</option>
-            </select>
-            <label for="edit-task-priority">Độ ưu tiên:</label>
-            <select id="edit-task-priority">
-                <option value="low">Thấp</option>
-                <option value="medium">Trung bình</option>
-                <option value="high">Cao</option>
-            </select>
-            <label for="edit-task-due-date">Ngày đến hạn:</label>
-            <input type="date" id="edit-task-due-date">
-            <label for="edit-task-assignee">Người thực hiện:</label>
-            <input type="text" id="edit-task-assignee" placeholder="Tên người thực hiện...">
-            <label for="edit-task-tags">Thẻ (cách nhau bởi dấu phẩy):</label>
-            <input type="text" id="edit-task-tags" placeholder="Ví dụ: bug, feature, urgent">
-            <div>
-                <label for="edit-task-blocked">
-                    <input type="checkbox" id="edit-task-blocked"> Bị chặn?
-                </label>
-            </div>
-            <div class="block-reason-container" id="edit-block-reason-container" style="display: none;">
-                <label for="edit-task-block-reason">Lý do bị chặn:</label>
-                <textarea id="edit-task-block-reason"></textarea>
-            </div>
-            <div class="modal-buttons">
-                <button type="button" class="cancel-btn" id="cancel-edit-task-btn">Hủy</button>
-                <button type="button" class="save-btn" id="save-edit-task-btn">Lưu thay đổi</button>
+            <label for="edit-task-title" class="block text-sm font-medium text-slate-700 mb-1">Tiêu đề:</label>
+            <input type="text" id="edit-task-title" class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm">
+            <label for="edit-task-description" class="block text-sm font-medium text-slate-700 mb-1">Mô tả:</label>
+            <textarea id="edit-task-description" class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm min-h-[80px]"></textarea>
+            <label for="edit-task-status" class="block text-sm font-medium text-slate-700 mb-1">Trạng thái:</label>
+            <select id="edit-task-status" class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm"> <option value="todo">Cần làm</option> <option value="inprogress">Đang làm</option> <option value="done">Hoàn thành</option> </select>
+            <label for="edit-task-priority" class="block text-sm font-medium text-slate-700 mb-1">Độ ưu tiên:</label>
+            <select id="edit-task-priority" class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm"> <option value="low">Thấp</option> <option value="medium">Trung bình</option> <option value="high">Cao</option> </select>
+            <label for="edit-task-due-date" class="block text-sm font-medium text-slate-700 mb-1">Ngày đến hạn:</label>
+            <input type="date" id="edit-task-due-date" class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm">
+            <label for="edit-task-assignee" class="block text-sm font-medium text-slate-700 mb-1">Người thực hiện:</label>
+            <input type="text" id="edit-task-assignee" placeholder="Tên người thực hiện..." class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm">
+            <label for="edit-task-tags" class="block text-sm font-medium text-slate-700 mb-1">Thẻ (cách nhau bởi dấu phẩy):</label>
+            <input type="text" id="edit-task-tags" placeholder="Ví dụ: bug, feature, urgent" class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 mb-3 text-sm">
+            <div class="mt-3 mb-2"> <label for="edit-task-blocked" class="flex items-center text-sm font-medium text-slate-700"> <input type="checkbox" id="edit-task-blocked" class="h-4 w-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500 mr-2"> Bị chặn? </label> </div>
+            <div class="block-reason-container mt-2" id="edit-block-reason-container" style="display: none;"> <label for="edit-task-block-reason" class="block text-sm font-medium text-slate-700 mb-1">Lý do bị chặn:</label> <textarea id="edit-task-block-reason" class="w-full p-2.5 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm min-h-[60px]"></textarea> </div>
+            <div class="modal-buttons flex justify-end gap-3 mt-5">
+                <button type="button" id="cancel-edit-task-btn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2 px-4 rounded-md text-sm">Hủy</button>
+                <button type="button" id="save-edit-task-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded-md text-sm">Lưu thay đổi</button>
             </div>
         </div>
     </div>
 
-    <div id="archived-tasks-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal-btn" id="close-archived-modal-btn">&times;</span>
-            <h3>Công việc đã lưu trữ</h3>
-            <div id="archived-tasks-list">
-                <p>Chức năng xem công việc đã lưu trữ sẽ được phát triển sau.</p>
+    <div id="archived-tasks-modal" class="modal hidden fixed inset-0 bg-slate-900/70 items-center justify-center z-50 p-4">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-xl">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200">
+                <h3 class="text-xl font-semibold text-sky-600">Công việc đã lưu trữ</h3>
+                <button id="close-archived-modal-btn" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+            </div>
+            <div id="archived-tasks-list" class="max-h-[60vh] overflow-y-auto">
+                <p class="text-slate-500 text-center">Chức năng xem công việc đã lưu trữ sẽ được phát triển sau.</p>
             </div>
         </div>
     </div>
 
-    <div id="custom-alert-overlay" class="custom-alert-overlay">
-        <div class="custom-alert-box">
-            <p id="custom-alert-message"></p>
-            <button id="custom-alert-ok-btn">OK</button>
+    <div id="custom-alert-overlay" class="hidden fixed inset-0 bg-slate-900/70 items-center justify-center z-[1060] p-4">
+        <div id="custom-alert-box" class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm text-center">
+            <p id="custom-alert-message" class="text-slate-700 mb-4"></p>
+            <button id="custom-alert-ok-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-5 rounded-md text-sm">OK</button>
         </div>
     </div>
 
-    <div id="task-detail-bottom-sheet-overlay"></div>
-    <div id="task-detail-bottom-sheet">
-        <h3 id="bs-task-title">Chi tiết công việc</h3>
-        <div id="bs-task-description" class="detail-item"><p></p></div>
-        <div id="bs-task-assignee" class="detail-item" style="display: none;"><strong>Người làm:</strong> <span></span></div>
-        <div id="bs-task-due-date" class="detail-item" style="display: none;"><strong>Hạn:</strong> <span></span></div>
-        <div id="bs-task-priority" class="detail-item" style="display: none;"><strong>Ưu tiên:</strong> <span></span></div>
-        <div id="bs-task-tags" class="detail-item" style="display: none;"><strong>Thẻ:</strong> <span class="bs-tags-container"></span></div>
-        <div id="bs-task-blocked-status" class="detail-item" style="display: none;"><strong>Trạng thái:</strong> <span class="bs-blocked-text" style="color: #b91c1c; font-weight: bold;">BỊ CHẶN</span></div>
-        <div id="bs-task-block-reason" class="detail-item" style="display: none;"><strong>Lý do chặn:</strong> <p></p></div>
-        <div id="bs-task-created-at" class="detail-item" style="display: none;"><strong>Ngày tạo:</strong> <span></span></div>
-        <button id="close-bottom-sheet-btn">Đóng</button>
+    <div id="task-detail-bottom-sheet-overlay" class="fixed inset-0 bg-black/50 z-[1040] transition-opacity duration-300 opacity-0 hidden"></div>
+    <div id="task-detail-bottom-sheet" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl p-5 transform translate-y-full transition-transform duration-300 ease-out z-[1050] max-h-[85vh] overflow-y-auto">
+        <h3 id="bs-task-title" class="text-xl font-semibold text-sky-600 mb-3 pb-2 border-b border-slate-200">Chi tiết công việc</h3>
+        <div id="bs-task-description" class="detail-item mb-3"><strong class="block text-slate-600 text-sm">Mô tả:</strong><p class="text-slate-700 text-sm leading-relaxed"></p></div>
+        <div id="bs-task-assignee" class="detail-item text-sm mb-2" style="display: none;"><strong>Người làm:</strong> <span class="text-slate-600"></span></div>
+        <div id="bs-task-due-date" class="detail-item text-sm mb-2" style="display: none;"><strong>Hạn:</strong> <span class="text-slate-600"></span></div>
+        <div id="bs-task-priority" class="detail-item text-sm mb-2" style="display: none;"><strong>Ưu tiên:</strong> <span class="text-slate-600"></span></div>
+        <div id="bs-task-tags" class="detail-item text-sm mb-2" style="display: none;"><strong>Thẻ:</strong> <span class="bs-tags-container mt-1 flex flex-wrap gap-1.5"></span></div>
+        <div id="bs-task-blocked-status" class="detail-item text-sm mb-2" style="display: none;"><strong>Trạng thái:</strong> <span class="bs-blocked-text text-red-600 font-semibold">BỊ CHẶN</span></div>
+        <div id="bs-task-block-reason" class="detail-item text-sm mb-2" style="display: none;"><strong class="block text-slate-600">Lý do chặn:</strong> <p class="text-slate-700"></p></div>
+        <div id="bs-task-created-at" class="detail-item text-xs text-slate-500 mt-3 pt-2 border-t border-slate-200" style="display: none;"><strong>Ngày tạo:</strong> <span></span></div>
+        <button id="close-bottom-sheet-btn" class="w-full mt-5 bg-slate-500 hover:bg-slate-600 text-white font-medium py-2.5 px-4 rounded-md text-sm">Đóng</button>
     </div>
 
 
@@ -690,20 +312,21 @@
 
       let draggedTask = null;
       let currentEditingTaskId = null;
-      const TASKS_COLLECTION = 'tasks_kanban_public_v14_bs';
+      const TASKS_COLLECTION = 'tasks_kanban_public_v15_tailwind';
       const priorityMap = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
       let currentTaskCounts = { todo: 0, inprogress: 0, done: 0 };
       let allTasks = [];
 
-      const iconPinOutline = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25L7.5 16.5V3.75m9 0H7.5A2.25 2.25 0 005.25 6v10.5A2.25 2.25 0 007.5 18.75h9A2.25 2.25 0 0018.75 16.5V6A2.25 2.25 0 0016.5 3.75z" /></svg>`;
-      const iconPinSolid = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0111.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 01-1.085.67L12 18.089l-7.165 3.583A.75.75 0 013.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93z" clip-rule="evenodd" /></svg>`;
-      const iconMoreVertical = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" /></svg>`;
-      const iconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>`;
-      const iconArrowRight = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>`;
-      const iconCheck = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`;
+      // SVG Icons
+      const iconPinOutline = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25L7.5 16.5V3.75m9 0H7.5A2.25 2.25 0 005.25 6v10.5A2.25 2.25 0 007.5 18.75h9A2.25 2.25 0 0018.75 16.5V6A2.25 2.25 0 0016.5 3.75z" /></svg>`;
+      const iconPinSolid = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0111.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 01-1.085.67L12 18.089l-7.165 3.583A.75.75 0 013.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93z" clip-rule="evenodd" /></svg>`;
+      const iconMoreVertical = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" /></svg>`;
+      const iconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>`;
+      const iconArrowRight = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>`;
+      const iconCheck = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`;
 
-      function showAlert(message) { customAlertMessage.textContent = message; customAlertOverlay.style.display = 'flex'; }
-      customAlertOkBtn.addEventListener('click', () => { customAlertOverlay.style.display = 'none'; });
+      function showAlert(message) { customAlertMessage.textContent = message; customAlertOverlay.classList.remove('hidden'); customAlertOverlay.classList.add('flex'); }
+      customAlertOkBtn.addEventListener('click', () => { customAlertOverlay.classList.add('hidden'); customAlertOverlay.classList.remove('flex'); });
 
       function formatDateForDisplay(dateString) {
           if (!dateString) return 'N/A';
@@ -720,14 +343,23 @@
         return `${year}-${month}-${day}`;
       }
 
+      function openModal(modalElement) {
+        modalElement.classList.remove('hidden');
+        modalElement.classList.add('flex'); // Use flex for centering
+      }
+      function closeModal(modalElement) {
+        modalElement.classList.add('hidden');
+        modalElement.classList.remove('flex');
+      }
+
       function openAddTaskModal() {
         addModalTaskTitleInput.value = ''; addModalTaskDescInput.value = '';
         addModalTaskStatusInput.value = currentActiveMobileColumnId || 'todo';
         addModalTaskPriorityInput.value = 'medium';
         addModalTaskDueDateInput.value = ''; addModalTaskAssigneeInput.value = ''; addModalTaskTagsInput.value = '';
-        addTaskModal.style.display = 'flex';
+        openModal(addTaskModal);
       }
-      function closeAddTaskModal() { addTaskModal.style.display = 'none'; }
+      function closeAddTaskModal() { closeModal(addTaskModal); }
       fabAddTaskBtn.addEventListener('click', openAddTaskModal);
       closeAddTaskModalBtn.addEventListener('click', closeAddTaskModal);
       cancelAddTaskBtn.addEventListener('click', closeAddTaskModal);
@@ -752,9 +384,9 @@
           editTaskBlockedCheckbox.checked = task.isBlocked || false;
           editTaskBlockReasonInput.value = task.blockReason || '';
           editBlockReasonContainer.style.display = editTaskBlockedCheckbox.checked ? 'block' : 'none';
-          editTaskModal.style.display = 'flex';
+          openModal(editTaskModal);
       }
-      function closeEditModal() { editTaskModal.style.display = 'none'; currentEditingTaskId = null; }
+      function closeEditModal() { closeModal(editTaskModal); currentEditingTaskId = null; }
       closeEditModalBtn.onclick = closeEditModal;
       cancelEditTaskBtn.onclick = closeEditModal;
       saveEditTaskBtn.addEventListener('click', async () => {
@@ -783,10 +415,10 @@
       });
 
       function openArchivedTasksModal() {
-          archivedTasksList.innerHTML = '<p>Chức năng xem công việc đã lưu trữ sẽ được phát triển ở các phiên bản sau.</p>';
-          archivedTasksModal.style.display = 'flex';
+          archivedTasksList.innerHTML = '<p class="text-slate-500">Chức năng xem công việc đã lưu trữ sẽ được phát triển ở các phiên bản sau.</p>';
+          openModal(archivedTasksModal);
       }
-      function closeArchivedTasksModal() { archivedTasksModal.style.display = 'none'; }
+      function closeArchivedTasksModal() { closeModal(archivedTasksModal); }
       viewArchivedBtn.addEventListener('click', openArchivedTasksModal);
       closeArchivedModalBtn.addEventListener('click', closeArchivedTasksModal);
 
@@ -794,72 +426,61 @@
         bsTaskTitle.textContent = taskData.title;
         bsTaskDescription.textContent = taskData.description || '(Không có mô tả)';
 
-        if (taskData.assignee) {
-            bsTaskAssignee.style.display = 'block';
-            bsTaskAssignee.querySelector('span').textContent = taskData.assignee;
-        } else {
-            bsTaskAssignee.style.display = 'none';
-        }
+        bsTaskAssignee.style.display = taskData.assignee ? 'block' : 'none';
+        if(taskData.assignee) bsTaskAssignee.querySelector('span').textContent = taskData.assignee;
 
-        if (taskData.dueDate) {
-            bsTaskDueDate.style.display = 'block';
+        bsTaskDueDate.style.display = taskData.dueDate ? 'block' : 'none';
+        if(taskData.dueDate) {
             const dueDateSpan = bsTaskDueDate.querySelector('span');
             dueDateSpan.textContent = formatDateForDisplay(taskData.dueDate);
-            dueDateSpan.className = ''; // Reset classes for due date span
+            dueDateSpan.className = 'text-slate-600'; // Reset classes
             const today = getTodayDateString();
-            if (taskData.dueDate < today) dueDateSpan.classList.add('due-overdue');
+            if (taskData.dueDate < today) dueDateSpan.classList.add('text-red-600', 'font-semibold');
             else {
                 const todayDate = new Date(today); const dueDateObj = new Date(taskData.dueDate);
                 const diffTime = dueDateObj - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                if (diffDays <= 1 && diffDays >=0 ) dueDateSpan.classList.add('due-soon');
+                if (diffDays <= 1 && diffDays >=0 ) dueDateSpan.classList.add('text-amber-600', 'font-semibold');
             }
-        } else {
-            bsTaskDueDate.style.display = 'none';
         }
 
         bsTaskPriority.style.display = 'block';
         bsTaskPriority.querySelector('span').textContent = priorityMap[taskData.priority || 'medium'];
 
+        bsTaskTags.style.display = (taskData.tags && taskData.tags.length > 0) ? 'block' : 'none';
         if (taskData.tags && taskData.tags.length > 0) {
-            bsTaskTags.style.display = 'block';
             bsTaskTagsContainer.innerHTML = '';
             taskData.tags.forEach(tagText => {
                 const tagSpan = document.createElement('span');
-                tagSpan.classList.add('bs-tag');
+                tagSpan.className = 'bs-tag bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded-full';
                 tagSpan.textContent = tagText;
                 bsTaskTagsContainer.appendChild(tagSpan);
             });
-        } else {
-            bsTaskTags.style.display = 'none';
         }
 
-        if (taskData.isBlocked) {
-            bsTaskBlockedStatus.style.display = 'block';
-            if (taskData.blockReason) {
-                bsTaskBlockReason.parentElement.style.display = 'block';
-                bsTaskBlockReason.textContent = taskData.blockReason;
-            } else {
-                bsTaskBlockReason.parentElement.style.display = 'none';
-            }
-        } else {
-            bsTaskBlockedStatus.style.display = 'none';
-            bsTaskBlockReason.parentElement.style.display = 'none';
-        }
+        bsTaskBlockedStatus.style.display = taskData.isBlocked ? 'block' : 'none';
+        bsTaskBlockReason.parentElement.style.display = (taskData.isBlocked && taskData.blockReason) ? 'block' : 'none';
+        if (taskData.isBlocked && taskData.blockReason) bsTaskBlockReason.textContent = taskData.blockReason;
 
+
+        bsTaskCreatedAt.style.display = (taskData.createdAt && taskData.createdAt.toDate) ? 'block' : 'none';
         if (taskData.createdAt && taskData.createdAt.toDate) {
-            bsTaskCreatedAt.style.display = 'block';
             bsTaskCreatedAt.querySelector('span').textContent = formatDateForDisplay(taskData.createdAt.toDate().toISOString().split('T')[0]) + " " + taskData.createdAt.toDate().toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
-        } else {
-            bsTaskCreatedAt.style.display = 'none';
         }
 
-        bottomSheet.classList.add('visible');
-        bottomSheetOverlay.classList.add('visible');
+        bottomSheet.classList.remove('translate-y-full');
+        bottomSheet.classList.add('translate-y-0', 'visible'); // Use visible to trigger display block
+        bottomSheetOverlay.classList.remove('opacity-0', 'hidden');
+        bottomSheetOverlay.classList.add('opacity-100', 'visible'); // Use visible to trigger display block
       }
 
       function closeBottomSheet() {
-        bottomSheet.classList.remove('visible');
-        bottomSheetOverlay.classList.remove('visible');
+        bottomSheet.classList.add('translate-y-full');
+        bottomSheet.classList.remove('translate-y-0', 'visible');
+        bottomSheetOverlay.classList.add('opacity-0');
+        setTimeout(() => { // Wait for transition to finish before hiding
+            bottomSheetOverlay.classList.add('hidden');
+            bottomSheet.classList.remove('visible'); // Ensure display:none is set after transition
+        }, 300);
       }
       closeBottomSheetBtn.addEventListener('click', closeBottomSheet);
       bottomSheetOverlay.addEventListener('click', closeBottomSheet);
@@ -869,7 +490,7 @@
           if (event.target == editTaskModal) closeEditModal();
           if (event.target == addTaskModal) closeAddTaskModal();
           if (event.target == archivedTasksModal) closeArchivedTasksModal();
-          if (event.target == customAlertOverlay) customAlertOverlay.style.display = 'none';
+          if (event.target == customAlertOverlay) { customAlertOverlay.classList.add('hidden'); customAlertOverlay.classList.remove('flex');}
       };
 
       function updateColumnUI() {
@@ -879,9 +500,9 @@
               const wipLimit = parseInt(column.dataset.wipLimit, 10);
               const currentCount = currentTaskCounts[status] || 0;
               if (countBadge) countBadge.textContent = currentCount;
-              column.classList.remove('wip-limit-exceeded', 'column-at-wip-limit');
+              column.classList.remove('border-red-400', 'bg-red-50');
               if (wipLimit !== -1 && currentCount >= wipLimit) {
-                  column.classList.add('column-at-wip-limit');
+                  column.classList.add('border-red-400', 'bg-red-50');
               }
           });
       }
@@ -916,40 +537,35 @@
 
       function createTaskCard(taskData) {
           const taskCard = document.createElement('div');
-          taskCard.classList.add('task-card');
+          taskCard.className = `task-card bg-white border border-slate-200 rounded-md p-3 shadow hover:shadow-md transition-shadow flex flex-col relative priority-${taskData.priority || 'medium'}`;
+          if (taskData.isPinned) taskCard.classList.add('task-pinned', 'border-amber-400', 'bg-amber-50');
+          if (taskData.isBlocked) taskCard.classList.add('blocked', 'bg-red-50', 'border-red-300');
           taskCard.setAttribute('draggable', 'true');
           taskCard.dataset.id = taskData.id;
           taskCard.dataset.status = taskData.status;
           taskCard.dataset.priority = taskData.priority || 'medium';
           taskCard.dataset.isPinned = taskData.isPinned ? 'true' : 'false';
 
-          taskCard.classList.remove('priority-high', 'priority-medium', 'priority-low');
-          taskCard.classList.add(`priority-${taskData.priority || 'medium'}`);
-
-          if (taskData.isPinned) taskCard.classList.add('task-pinned');
-          if (taskData.isBlocked) taskCard.classList.add('blocked');
-
-
           // Card Header
           const cardHeader = document.createElement('div');
-          cardHeader.classList.add('task-card-header');
+          cardHeader.className = 'task-card-header flex justify-between items-start mb-1.5';
           const titleText = document.createElement('p');
-          titleText.classList.add('task-card-title-text');
+          titleText.className = 'task-card-title-text text-sm font-semibold text-slate-800 flex-grow cursor-pointer line-clamp-2 leading-tight';
           titleText.textContent = taskData.title;
           titleText.onclick = () => openEditModal(taskData); // Click title to edit
           cardHeader.appendChild(titleText);
 
           const cardActions = document.createElement('div');
-          cardActions.classList.add('task-card-actions');
+          cardActions.className = 'task-card-actions flex items-center gap-1 ml-2 flex-shrink-0';
           const pinButton = document.createElement('button');
-          pinButton.classList.add('pin-btn');
+          pinButton.className = `pin-btn p-1 rounded hover:bg-slate-200 ${taskData.isPinned ? 'text-amber-500' : 'text-slate-400'}`;
           pinButton.innerHTML = taskData.isPinned ? iconPinSolid : iconPinOutline;
           pinButton.title = taskData.isPinned ? "Bỏ ghim" : "Ghim";
-          if(taskData.isPinned) pinButton.classList.add('pinned');
           pinButton.onclick = (e) => { e.stopPropagation(); togglePinTask(taskData); };
           cardActions.appendChild(pinButton);
 
           const moreButton = document.createElement('button');
+          moreButton.className = 'p-1 rounded text-slate-400 hover:bg-slate-200 hover:text-slate-600';
           moreButton.innerHTML = iconMoreVertical;
           moreButton.title = "Xem chi tiết & Hành động";
           moreButton.onclick = (e) => { e.stopPropagation(); openBottomSheet(taskData); };
@@ -960,36 +576,35 @@
           // Description Snippet
           if (taskData.description && taskData.description.trim() !== '') {
             const descSnippet = document.createElement('p');
-            descSnippet.classList.add('task-card-description-snippet');
+            descSnippet.className = 'task-card-description-snippet text-xs text-slate-600 mt-0.5 mb-1.5 line-clamp-2 leading-snug';
             descSnippet.textContent = taskData.description;
             taskCard.appendChild(descSnippet);
           }
 
-
           // Minimal Indicators
           const minimalIndicators = document.createElement('div');
-          minimalIndicators.classList.add('task-card-minimal-indicators');
+          minimalIndicators.className = 'task-card-minimal-indicators flex flex-wrap gap-2 items-center text-xs text-slate-500 mt-1.5';
           if (taskData.dueDate) {
               const today = getTodayDateString(); const dueDate = taskData.dueDate;
-              let dueDateIndicatorText = ''; let dueDateClass = '';
+              let dueDateIndicatorText = ''; let dueDateClasses = 'task-due-date-indicator px-1.5 py-0.5 rounded text-xs';
               if (dueDate < today) {
                   dueDateIndicatorText = `Hạn: ${formatDateForDisplay(dueDate)} (Quá hạn)`;
-                  dueDateClass = 'due-overdue';
+                  dueDateClasses += ' bg-red-100 text-red-700';
               } else {
                   const todayDate = new Date(today); const dueDateObj = new Date(dueDate);
                   const diffTime = dueDateObj - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  if (diffDays === 0) { dueDateIndicatorText = "Hạn: Hôm nay"; dueDateClass = 'due-soon';}
-                  else if (diffDays === 1) { dueDateIndicatorText = "Hạn: Ngày mai"; dueDateClass = 'due-soon';}
+                  if (diffDays === 0) { dueDateIndicatorText = "Hạn: Hôm nay"; dueDateClasses += ' bg-amber-100 text-amber-700';}
+                  else if (diffDays === 1) { dueDateIndicatorText = "Hạn: Ngày mai"; dueDateClasses += ' bg-amber-100 text-amber-700';}
               }
               if (dueDateIndicatorText) {
                   const dueDateIndicator = document.createElement('span');
-                  dueDateIndicator.classList.add('task-due-date-indicator', dueDateClass);
+                  dueDateIndicator.className = dueDateClasses;
                   dueDateIndicator.textContent = dueDateIndicatorText;
                   minimalIndicators.appendChild(dueDateIndicator);
               }
           }
           const priorityBadge = document.createElement('span');
-          priorityBadge.classList.add('priority-indicator-badge', `prio-${taskData.priority || 'medium'}`);
+          priorityBadge.className = `priority-indicator-badge px-1.5 py-0.5 rounded text-xs text-white bg-priority-${taskData.priority || 'medium'}`;
           priorityBadge.textContent = priorityMap[taskData.priority || 'medium'];
           minimalIndicators.appendChild(priorityBadge);
           if (minimalIndicators.hasChildNodes()) {
@@ -998,13 +613,13 @@
 
           // Card Footer
           const cardFooter = document.createElement('div');
-          cardFooter.classList.add('task-card-footer');
+          cardFooter.className = 'task-card-footer mt-2 pt-1.5 border-t border-slate-200 flex justify-between items-center';
           const moveActions = document.createElement('div');
-          moveActions.classList.add('task-move-actions');
+          moveActions.className = 'task-move-actions flex gap-1.5';
           if (taskData.status !== 'todo') {
               const moveToTodoBtn = document.createElement('button');
               moveToTodoBtn.innerHTML = iconArrowLeft; moveToTodoBtn.title = "Chuyển sang Cần làm";
-              moveToTodoBtn.classList.add('move-btn-todo');
+              moveToTodoBtn.className = 'move-btn-todo p-1.5 rounded bg-slate-100 hover:bg-red-100 border border-slate-200 hover:border-red-300 text-red-600';
               moveToTodoBtn.onclick = (e) => { e.stopPropagation(); updateTaskStatusInFirestore(taskData.id, 'todo', taskData.status); };
               moveActions.appendChild(moveToTodoBtn);
           }
@@ -1012,20 +627,20 @@
               const moveToInProgressBtn = document.createElement('button');
               moveToInProgressBtn.innerHTML = (taskData.status === 'todo') ? iconArrowRight : iconArrowLeft;
               moveToInProgressBtn.title = "Chuyển sang Đang làm";
-              moveToInProgressBtn.classList.add('move-btn-inprogress');
+              moveToInProgressBtn.className = 'move-btn-inprogress p-1.5 rounded bg-slate-100 hover:bg-amber-100 border border-slate-200 hover:border-amber-300 text-amber-600';
               moveToInProgressBtn.onclick = (e) => { e.stopPropagation(); updateTaskStatusInFirestore(taskData.id, 'inprogress', taskData.status); };
               moveActions.appendChild(moveToInProgressBtn);
           }
           if (taskData.status !== 'done') {
               const moveToDoneBtn = document.createElement('button');
               moveToDoneBtn.innerHTML = iconCheck; moveToDoneBtn.title = "Hoàn thành";
-              moveToDoneBtn.classList.add('move-btn-done');
+              moveToDoneBtn.className = 'move-btn-done p-1.5 rounded bg-slate-100 hover:bg-green-100 border border-slate-200 hover:border-green-300 text-green-600';
               moveToDoneBtn.onclick = (e) => { e.stopPropagation(); updateTaskStatusInFirestore(taskData.id, 'done', taskData.status); };
               moveActions.appendChild(moveToDoneBtn);
           }
           cardFooter.appendChild(moveActions);
           const timestamp = document.createElement('span');
-          timestamp.classList.add('task-timestamp');
+          timestamp.className = 'task-timestamp text-xs text-slate-400';
           timestamp.textContent = taskData.createdAt && taskData.createdAt.toDate ?
             formatDateForDisplay(taskData.createdAt.toDate().toISOString().split('T')[0])
             : 'N/A';
@@ -1084,13 +699,14 @@
           draggedTask = event.target.closest('.task-card');
           if (!draggedTask) return;
           event.dataTransfer.setData('text/plain', draggedTask.dataset.id);
-          setTimeout(() => { if(draggedTask) draggedTask.classList.add('dragging'); }, 0);
+          setTimeout(() => { if(draggedTask) draggedTask.classList.add('opacity-50', 'border-dashed', 'border-sky-500'); }, 0);
       }
       function handleDragEnd(event) {
-          if (draggedTask) draggedTask.classList.remove('dragging'); draggedTask = null;
+          if (draggedTask) draggedTask.classList.remove('opacity-50', 'border-dashed', 'border-sky-500');
+          draggedTask = null;
           kanbanColumns.forEach(col => {
             const tasksContainer = col.querySelector('.tasks-container');
-            if(tasksContainer) tasksContainer.classList.remove('drag-over-column', 'wip-limit-exceeded');
+            if(tasksContainer) tasksContainer.classList.remove('bg-sky-100/50', 'border-sky-300', 'border-dashed');
           });
       }
       kanbanColumns.forEach(column => {
@@ -1098,26 +714,26 @@
           tasksContainer.addEventListener('dragover', (event) => {
               event.preventDefault();
               if (!draggedTask) return;
-              tasksContainer.classList.add('drag-over-column');
+              tasksContainer.classList.add('bg-sky-100/50', 'border-sky-300', 'border-dashed');
               const targetColumnEl = column;
               const targetStatus = targetColumnEl.dataset.status;
               const wipLimit = parseInt(targetColumnEl.dataset.wipLimit, 10);
               const currentCountInTarget = currentTaskCounts[targetStatus] || 0;
               if (draggedTask.dataset.status !== targetStatus && wipLimit !== -1 && currentCountInTarget >= wipLimit) {
                   event.dataTransfer.dropEffect = 'none';
-                  tasksContainer.classList.add('wip-limit-exceeded');
+                  tasksContainer.classList.add('border-red-400', 'bg-red-100/50');
               } else {
                   event.dataTransfer.dropEffect = 'move';
-                  tasksContainer.classList.remove('wip-limit-exceeded');
+                  tasksContainer.classList.remove('border-red-400', 'bg-red-100/50');
               }
           });
           tasksContainer.addEventListener('dragleave', (event) => {
-              tasksContainer.classList.remove('drag-over-column', 'wip-limit-exceeded');
+              tasksContainer.classList.remove('bg-sky-100/50', 'border-sky-300', 'border-dashed', 'border-red-400', 'bg-red-100/50');
           });
           tasksContainer.addEventListener('drop', async (event) => {
               event.preventDefault();
               if (!draggedTask) return;
-              tasksContainer.classList.remove('drag-over-column', 'wip-limit-exceeded');
+              tasksContainer.classList.remove('bg-sky-100/50', 'border-sky-300', 'border-dashed', 'border-red-400', 'bg-red-100/50');
               const targetColumnEl = column;
               const taskId = draggedTask.dataset.id;
               const oldStatus = draggedTask.dataset.status;
@@ -1200,7 +816,7 @@
               else console.warn(`Column container for status "${taskData.status}" not found.`);
           });
 
-          const emptyIconSvg = `<svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>`;
+          const emptyIconSvg = `<svg class="empty-icon w-10 h-10 text-slate-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>`;
           let hasActiveFilters = searchTermInput.value || filterPrioritySelect.value || filterAssigneeSelect.value || filterTagSelect.value || filterBlockedSelect.value || filterDueDateSelect.value;
           kanbanColumns.forEach(column => {
               const status = column.dataset.status;
@@ -1217,8 +833,8 @@
                   }
                   if (hasActiveFilters) message = `Không có công việc nào khớp bộ lọc.`;
                   else message = `Chưa có công việc nào. Nhấn "+" để thêm.`;
-                  container.innerHTML = `${emptyIconSvg}<p>${message}</p>`;
-                  container.classList.add('empty');
+                  container.innerHTML = `${emptyIconSvg}<p class="text-sm text-slate-500">${message}</p>`;
+                  container.classList.add('empty', 'border-2', 'border-dashed', 'border-slate-300', 'rounded-md', 'p-4', 'mt-2.5');
               }
           });
           updateColumnUI(); handleMobileLayout();
@@ -1233,8 +849,15 @@
       function setActiveMobileColumn(status) {
           currentActiveMobileColumnId = status;
           mobileTabButtons.forEach(btn => {
-              btn.classList.remove('active-tab');
-              if (btn.dataset.status === status) btn.classList.add('active-tab');
+              btn.classList.remove('active-tab', 'text-sky-600', 'border-sky-600', 'text-kanban-todo-text', 'border-kanban-todo-text', 'text-kanban-inprogress-text', 'border-kanban-inprogress-text', 'text-kanban-done-text', 'border-kanban-done-text');
+              btn.classList.add('text-slate-600', 'border-transparent');
+              if (btn.dataset.status === status) {
+                btn.classList.add('active-tab');
+                if (status === 'todo') btn.classList.add('text-kanban-todo-text', 'border-kanban-todo-text');
+                else if (status === 'inprogress') btn.classList.add('text-kanban-inprogress-text', 'border-kanban-inprogress-text');
+                else if (status === 'done') btn.classList.add('text-kanban-done-text', 'border-kanban-done-text');
+                else btn.classList.add('text-sky-600', 'border-sky-600');
+              }
           });
           kanbanColumns.forEach(col => {
               if (col.id === status) { col.classList.add('active-mobile-column'); col.style.display = 'flex'; }
@@ -1271,7 +894,7 @@
           console.error("Error fetching tasks with onSnapshot: ", error);
           showAlert("Lỗi tải danh sách công việc: " + error.message);
       });
-      handleMobileLayout();
+      handleMobileLayout(); // Initial layout check
     </script>
 </body>
 </html>
