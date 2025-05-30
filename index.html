@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Tailwind CSS - Tối Ưu Giao Diện V2)</title>
+    <title>Bảng Kanban Task (Tailwind CSS - Cập Nhật WIP & Chặn)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -34,10 +34,24 @@
         .line-clamp-1 { -webkit-line-clamp: 1; }
         .line-clamp-2 { -webkit-line-clamp: 2; }
 
-        .dragging { opacity: 0.5 !important; border: 2px dashed #3b82f6 !important; } /* blue-500 */
-        .drag-over-column .tasks-container { background-color: #eff6ff !important; border: 1px dashed #93c5fd !important; } /* blue-50, blue-300 */
-        .wip-limit-exceeded .tasks-container { border: 2px dashed #ef4444 !important; background-color: #fee2e2 !important; } /* red-500, red-100 */
+        .dragging { opacity: 0.5 !important; border: 2px dashed #3b82f6 !important; }
+        .drag-over-column .tasks-container { background-color: #eff6ff !important; border: 1px dashed #93c5fd !important; }
+        .wip-limit-exceeded .tasks-container { border: 2px dashed #ef4444 !important; background-color: #fee2e2 !important; }
         
+        /* WIP Limit Indicator Text for column header badge */
+        .column-at-wip-limit > .column-header .task-count-badge::after {
+            content: " (WIP Limit!)";
+            color: #ef4444; /* Tailwind red-500 */
+            font-weight: 600; /* semibold */
+            font-size: 0.7rem; /* Smaller than badge text */
+            margin-left: 0.25rem; /* ml-1 */
+        }
+         /* Red border for the entire column when WIP limit is reached */
+        .column-at-wip-limit {
+            border: 2px solid #ef4444 !important; /* red-500, !important to override other borders */
+        }
+
+
         /* Filter bar transition */
         .filter-bar {
             max-height: 0;
@@ -51,9 +65,9 @@
         .filter-bar.filter-bar-visible {
             max-height: 1000px; 
             opacity: 1;
-            padding-top: 1.25rem; /* p-5 */
+            padding-top: 1.25rem; 
             padding-bottom: 1.25rem;
-            margin-bottom: 1.5rem; /* mb-6 */
+            margin-bottom: 1.5rem; 
         }
 
         /* Bottom Sheet transition */
@@ -78,9 +92,9 @@
               'kanban-inprogress-text': '#d48806',
               'kanban-done': '#f6ffed',
               'kanban-done-text': '#389e0d',
-              'priority-low': '#22c55e',    // green-500
-              'priority-medium': '#f59e0b', // amber-500
-              'priority-high': '#ef4444',   // red-500
+              'priority-low': '#22c55e',
+              'priority-medium': '#f59e0b',
+              'priority-high': '#ef4444',
             }
           }
         }
@@ -271,6 +285,7 @@
       const db = getFirestore(app);
 
       // DOM Elements
+      const appContainer = document.querySelector('.app-container');
       const kanbanColumns = document.querySelectorAll('.kanban-column');
       const customAlertOverlay = document.getElementById('custom-alert-overlay');
       const customAlertMessage = document.getElementById('custom-alert-message');
@@ -545,30 +560,17 @@
               
               if (countBadge) {
                 countBadge.textContent = currentCount;
-                // Remove existing WIP limit text if present
-                const wipTextNode = Array.from(countBadge.childNodes).find(node => node.nodeType === Node.TEXT_NODE && node.textContent.includes('(WIP Limit!)'));
-                if (wipTextNode) {
-                    countBadge.removeChild(wipTextNode);
+                // Check if WIP limit text already exists to avoid duplication
+                const existingWipText = column.querySelector('.column-header .wip-limit-text');
+                if (existingWipText) {
+                    existingWipText.remove();
                 }
               }
               
-              column.classList.remove('border-red-500'); // Tailwind class for WIP limit border
+              column.classList.remove('border-red-500', 'column-at-wip-limit'); // Tailwind class for WIP limit border
               if (wipLimit !== -1 && currentCount >= wipLimit) {
-                  column.classList.add('border-red-500'); // Apply red border to the whole column
-                  if (countBadge && !countBadge.textContent.includes('(WIP Limit!)')) { // Add WIP limit text if not already there
-                     const wipLimitText = document.createElement('span');
-                     wipLimitText.className = 'text-red-500 font-semibold text-xs ml-1';
-                     wipLimitText.textContent = '(WIP Limit!)';
-                     // Insert after the number, but ensure it's not duplicated.
-                     // A simple way is to clear and re-add, or check if it exists.
-                     // For now, let's rely on the CSS ::after for simplicity if that was the original intent,
-                     // or manage this span carefully.
-                     // The CSS ::after rule `.column-at-wip-limit .column-header .task-count-badge::after` handles this.
-                     // So, just ensure `.column-at-wip-limit` is applied to the column.
-                     column.classList.add('column-at-wip-limit');
-                  }
-              } else {
-                column.classList.remove('column-at-wip-limit');
+                  column.classList.add('border-red-500', 'column-at-wip-limit'); // Apply red border to the whole column
+                  // The CSS ::after pseudo-element on .task-count-badge within .column-at-wip-limit will add the text
               }
           });
       }
@@ -654,47 +656,58 @@
           if (taskData.assignee) {
               const assigneeIndicator = document.createElement('span');
               assigneeIndicator.className = 'flex items-center';
-              // Optional: Add an assignee icon
-              // assigneeIndicator.innerHTML = `<svg class="w-3.5 h-3.5 mr-1 text-slate-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>`;
+              assigneeIndicator.innerHTML = `<svg class="w-3.5 h-3.5 mr-1 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-5.5-2.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM10 12a5.99 5.99 0 00-4.793 2.39A6.483 6.483 0 0010 16.5a6.483 6.483 0 004.793-2.11A5.99 5.99 0 0010 12z" clip-rule="evenodd" /></svg>`;
               assigneeIndicator.appendChild(document.createTextNode(taskData.assignee));
               minimalIndicators.appendChild(assigneeIndicator);
           }
 
           if (taskData.dueDate) {
               const today = getTodayDateString(); const dueDate = taskData.dueDate;
-              let dueDateIndicatorText = ''; let dueDateClasses = 'task-due-date-indicator px-1.5 py-0.5 rounded text-xs';
+              let dueDateIndicatorText = ''; let dueDateClasses = 'task-due-date-indicator px-1.5 py-0.5 rounded text-xs flex items-center';
+              let dateIcon = `<svg class="w-3.5 h-3.5 mr-1 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-3.75h.008v.008H12v-.008z" /></svg>`;
+
               if (dueDate < today) {
-                  dueDateIndicatorText = `Hạn: ${formatDateForDisplay(dueDate)} (Quá hạn)`;
+                  dueDateIndicatorText = `${formatDateForDisplay(dueDate)} (Quá hạn)`;
                   dueDateClasses += ' bg-red-100 text-red-700';
               } else {
                   const todayDate = new Date(today); const dueDateObj = new Date(dueDate);
                   const diffTime = dueDateObj - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  if (diffDays === 0) { dueDateIndicatorText = "Hạn: Hôm nay"; dueDateClasses += ' bg-amber-100 text-amber-700';}
-                  else if (diffDays === 1) { dueDateIndicatorText = "Hạn: Ngày mai"; dueDateClasses += ' bg-amber-100 text-amber-700';}
-                  // else { dueDateIndicatorText = `Hạn: ${formatDateForDisplay(dueDate)}`; } // Show normal due date if not soon/overdue
+                  if (diffDays === 0) { dueDateIndicatorText = "Hôm nay"; dueDateClasses += ' bg-amber-100 text-amber-700';}
+                  else if (diffDays === 1) { dueDateIndicatorText = "Ngày mai"; dueDateClasses += ' bg-amber-100 text-amber-700';}
+                  else { dueDateIndicatorText = formatDateForDisplay(dueDate); }
               }
               if (dueDateIndicatorText) {
                   const dueDateIndicator = document.createElement('span');
                   dueDateIndicator.className = dueDateClasses;
-                  dueDateIndicator.textContent = dueDateIndicatorText;
+                  dueDateIndicator.innerHTML = dateIcon + dueDateIndicatorText;
                   minimalIndicators.appendChild(dueDateIndicator);
               }
           }
-          // Priority badge will be on the right
+          // Blocked Indicator on Card
+          if (taskData.isBlocked) {
+            const blockedCardIndicator = document.createElement('span');
+            blockedCardIndicator.className = 'task-blocked-indicator px-1.5 py-0.5 rounded text-xs bg-red-500 text-white font-semibold flex items-center';
+            blockedCardIndicator.innerHTML = `<svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12zm-1-5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm1-4a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>CHẶN`;
+            minimalIndicators.appendChild(blockedCardIndicator);
+          }
+
+
           const priorityBadge = document.createElement('span');
-          priorityBadge.className = `priority-indicator-badge px-1.5 py-0.5 rounded text-xs text-white bg-priority-${taskData.priority || 'medium'} ml-auto`; // Added ml-auto
+          priorityBadge.className = `priority-indicator-badge px-1.5 py-0.5 rounded text-xs text-white bg-priority-${taskData.priority || 'medium'} ml-auto`;
           priorityBadge.textContent = priorityMap[taskData.priority || 'medium'];
           minimalIndicators.appendChild(priorityBadge);
+
 
           if (minimalIndicators.hasChildNodes()) {
               taskCard.appendChild(minimalIndicators);
           }
 
+
           // Card Footer
           const cardFooter = document.createElement('div');
           cardFooter.className = 'task-card-footer mt-2 pt-1.5 border-t border-slate-200 flex justify-between items-center';
           const moveActions = document.createElement('div');
-          moveActions.className = 'task-move-actions flex gap-1.5'; // Keep gap for move buttons
+          moveActions.className = 'task-move-actions flex gap-1.5';
           if (taskData.status !== 'todo') {
               const moveToTodoBtn = document.createElement('button');
               moveToTodoBtn.innerHTML = iconArrowLeft; moveToTodoBtn.title = "Chuyển sang Cần làm";
