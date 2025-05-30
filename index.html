@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Tailwind CSS - Đã Sửa)</title>
+    <title>Bảng Kanban Task (Tailwind CSS - Tối Ưu Giao Diện)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -34,9 +34,18 @@
         .line-clamp-1 { -webkit-line-clamp: 1; }
         .line-clamp-2 { -webkit-line-clamp: 2; }
 
-        .dragging { opacity: 0.5 !important; border: 2px dashed #3b82f6 !important; } /* blue-500 */
-        .drag-over-column .tasks-container { background-color: #eff6ff !important; border: 1px dashed #93c5fd !important; } /* blue-50, blue-300 */
-        .wip-limit-exceeded .tasks-container { border: 2px dashed #ef4444 !important; background-color: #fee2e2 !important; } /* red-500, red-100 */
+        .dragging { opacity: 0.5 !important; border: 2px dashed #3b82f6 !important; }
+        .drag-over-column .tasks-container { background-color: #eff6ff !important; border: 1px dashed #93c5fd !important; }
+        .wip-limit-exceeded .tasks-container { border: 2px dashed #ef4444 !important; background-color: #fee2e2 !important; }
+        
+        /* WIP Limit Indicator Text */
+        .column-at-wip-limit .column-header .task-count-badge::after {
+            content: " (WIP Limit!)";
+            color: #ef4444; /* Tailwind red-500 */
+            font-weight: 600; /* semibold */
+            font-size: 0.75rem; /* text-xs */
+            margin-left: 0.25rem; /* ml-1 */
+        }
 
         /* Filter bar transition */
         .filter-bar {
@@ -46,14 +55,14 @@
             padding-bottom: 0;
             margin-bottom: 0;
             overflow: hidden;
-            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out, margin-bottom 0.5s ease-in-out;
+            transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding-top 0.4s ease-out, padding-bottom 0.4s ease-out, margin-bottom 0.4s ease-out;
         }
         .filter-bar.filter-bar-visible {
-            max-height: 1000px; /* Adjust if filter bar content is taller */
+            max-height: 1000px; 
             opacity: 1;
-            padding-top: 1.25rem; /* Corresponds to p-5 in Tailwind */
+            padding-top: 1.25rem; 
             padding-bottom: 1.25rem;
-            margin-bottom: 1.5rem; /* Corresponds to mb-6 in Tailwind */
+            margin-bottom: 1.5rem; 
         }
 
         /* Bottom Sheet transition */
@@ -78,9 +87,9 @@
               'kanban-inprogress-text': '#d48806',
               'kanban-done': '#f6ffed',
               'kanban-done-text': '#389e0d',
-              'priority-low': '#22c55e',    // green-500
-              'priority-medium': '#f59e0b', // amber-500
-              'priority-high': '#ef4444',   // red-500
+              'priority-low': '#22c55e',
+              'priority-medium': '#f59e0b',
+              'priority-high': '#ef4444',
             }
           }
         }
@@ -88,12 +97,12 @@
     </script>
 </head>
 <body class="bg-slate-100 text-slate-800">
-    <div class="app-container max-w-screen-xl mx-auto p-4 md:p-6">
+    <div class="app-container w-full px-2 sm:px-4 md:px-6"> 
         <header id="app-main-header" class="text-center mb-6">
             <h1 class="text-3xl font-semibold text-sky-600">Ghi chú Kanban</h1>
         </header>
 
-        <div class="actions-bar-container bg-white p-3 md:p-4 rounded-lg shadow mb-6 flex justify-end items-center gap-3">
+        <div class="actions-bar-container bg-white p-3 md:p-4 rounded-lg shadow mb-6 flex justify-end items-center gap-3 max-w-screen-xl mx-auto"> 
             <button id="view-archived-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md flex items-center text-sm">
                 <span class="icon mr-2">🗄️</span> Xem Lưu Trữ
             </button>
@@ -102,14 +111,14 @@
             </button>
         </div>
 
-        <div class="filter-bar bg-white rounded-lg shadow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-end" id="filter-bar">
+        <div class="filter-bar bg-white rounded-lg shadow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4 items-end max-w-screen-xl mx-auto" id="filter-bar"> 
             <div class="form-group"> <label for="search-term-input" class="block text-sm font-medium text-slate-700 mb-1">Tìm theo tiêu đề:</label> <input type="text" id="search-term-input" placeholder="Nhập từ khóa..." class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> </div>
             <div class="form-group"> <label for="filter-priority" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo ưu tiên:</label> <select id="filter-priority" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả ưu tiên</option> <option value="high">Cao</option> <option value="medium">Trung bình</option> <option value="low">Thấp</option> </select> </div>
             <div class="form-group"> <label for="filter-assignee" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo người thực hiện:</label> <select id="filter-assignee" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả người thực hiện</option> </select> </div>
             <div class="form-group"> <label for="filter-tag" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo thẻ:</label> <select id="filter-tag" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả thẻ</option> </select> </div>
             <div class="form-group"> <label for="filter-blocked" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo trạng thái chặn:</label> <select id="filter-blocked" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả</option> <option value="yes">Bị chặn</option> <option value="no">Không bị chặn</option> </select> </div>
             <div class="form-group"> <label for="filter-due-date" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo ngày đến hạn:</label> <select id="filter-due-date" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả ngày</option> <option value="overdue">Quá hạn</option> <option value="today">Hôm nay</option> <option value="next7days">Trong 7 ngày tới</option> <option value="noduedate">Không có ngày đến hạn</option> </select> </div>
-            <div class="actions xl:col-span-6 flex justify-end gap-3 mt-3"> <button id="apply-filters-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded-md text-sm">Áp dụng lọc</button> <button id="clear-filters-btn" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md text-sm">Xóa bộ lọc</button> </div>
+            <div class="actions xl:col-span-full 2xl:col-span-6 flex justify-end gap-3 mt-3 sm:mt-0 sm:self-end"> <button id="apply-filters-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded-md text-sm">Áp dụng lọc</button> <button id="clear-filters-btn" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md text-sm">Xóa bộ lọc</button> </div>
         </div>
 
         <div id="kanban-mobile-tabs" class="md:hidden flex bg-white border-b border-slate-200 mb-4 shadow-sm">
@@ -126,7 +135,7 @@
 
         <button id="fab-add-task" class="fixed bottom-8 right-8 w-14 h-14 bg-sky-500 hover:bg-sky-600 text-white rounded-full text-3xl flex items-center justify-center shadow-lg z-50" title="Thêm công việc mới">+</button>
 
-        <div class="kanban-board grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="kanban-board grid grid-cols-1 md:grid-cols-3 gap-4"> 
             <div class="kanban-column bg-kanban-todo rounded-lg p-4 shadow-md flex flex-col" id="todo" data-status="todo" data-wip-limit="-1">
                 <div class="column-header flex items-center justify-between mb-4 pb-3 border-b border-rose-200">
                     <span class="title-group flex items-center text-lg font-semibold text-kanban-todo-text">
@@ -374,7 +383,7 @@
             modalElement.classList.remove('hidden');
             modalElement.classList.add('flex');
         } else {
-            console.error("Modal element not found for openModal");
+            console.error("Modal element not found for openModal:", modalElement);
         }
       }
       function closeModal(modalElement) {
@@ -382,7 +391,7 @@
             modalElement.classList.add('hidden');
             modalElement.classList.remove('flex');
         } else {
-            console.error("Modal element not found for closeModal");
+             console.error("Modal element not found for closeModal:", modalElement);
         }
       }
 
@@ -461,15 +470,11 @@
         bsTaskTitle.textContent = taskData.title || "Không có tiêu đề";
         bsTaskDescription.textContent = taskData.description || '(Không có mô tả)';
 
-        if (taskData.assignee) {
-            bsTaskAssignee.style.display = 'block';
-            bsTaskAssignee.querySelector('span').textContent = taskData.assignee;
-        } else {
-            bsTaskAssignee.style.display = 'none';
-        }
+        bsTaskAssignee.style.display = taskData.assignee ? 'block' : 'none';
+        if(taskData.assignee) bsTaskAssignee.querySelector('span').textContent = taskData.assignee;
 
-        if (taskData.dueDate) {
-            bsTaskDueDate.style.display = 'block';
+        bsTaskDueDate.style.display = taskData.dueDate ? 'block' : 'none';
+        if(taskData.dueDate) {
             const dueDateSpan = bsTaskDueDate.querySelector('span');
             dueDateSpan.textContent = formatDateForDisplay(taskData.dueDate);
             dueDateSpan.className = 'text-slate-600'; // Reset classes
@@ -488,8 +493,6 @@
                     dueDateSpan.textContent += " (Ngày mai)";
                 }
             }
-        } else {
-            bsTaskDueDate.style.display = 'none';
         }
 
         bsTaskPriority.style.display = 'block';
@@ -528,7 +531,7 @@
         bottomSheetOverlay.classList.add('opacity-0');
         setTimeout(() => {
             bottomSheetOverlay.classList.add('hidden');
-            bottomSheet.classList.add('hidden'); // Ensure it's hidden after transition
+            bottomSheet.classList.add('hidden');
         }, 300);
       }
       closeBottomSheetBtn.addEventListener('click', closeBottomSheet);
@@ -589,7 +592,7 @@
       function createTaskCard(taskData) {
           const taskCard = document.createElement('div');
           taskCard.className = `task-card bg-white border border-slate-200 rounded-md p-3 shadow hover:shadow-md transition-shadow flex flex-col relative border-l-4 border-priority-${taskData.priority || 'medium'}`;
-          if (taskData.isPinned) taskCard.classList.add('task-pinned', '!border-amber-400', '!bg-amber-50'); // Use ! to ensure override
+          if (taskData.isPinned) taskCard.classList.add('task-pinned', '!border-amber-400', '!bg-amber-50');
           if (taskData.isBlocked) taskCard.classList.add('blocked', '!bg-red-50', '!border-red-300', '!border-l-red-700');
           taskCard.setAttribute('draggable', 'true');
           taskCard.dataset.id = taskData.id;
