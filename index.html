@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Tailwind CSS - Lưu Trữ Cải Tiến)</title>
+    <title>Bảng Kanban Task (Tailwind CSS - Lịch Sử Thay Đổi)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -11,18 +11,18 @@
             font-family: 'Inter', sans-serif;
             overscroll-behavior: none; 
         }
-        .tasks-container::-webkit-scrollbar, #archived-tasks-list::-webkit-scrollbar, #task-detail-bottom-sheet::-webkit-scrollbar {
+        .tasks-container::-webkit-scrollbar, #archived-tasks-list::-webkit-scrollbar, #task-detail-bottom-sheet::-webkit-scrollbar, #bs-change-log-list::-webkit-scrollbar {
             width: 8px;
         }
-        .tasks-container::-webkit-scrollbar-track, #archived-tasks-list::-webkit-scrollbar-track, #task-detail-bottom-sheet::-webkit-scrollbar-track {
+        .tasks-container::-webkit-scrollbar-track, #archived-tasks-list::-webkit-scrollbar-track, #task-detail-bottom-sheet::-webkit-scrollbar-track, #bs-change-log-list::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 10px;
         }
-        .tasks-container::-webkit-scrollbar-thumb, #archived-tasks-list::-webkit-scrollbar-thumb, #task-detail-bottom-sheet::-webkit-scrollbar-thumb {
+        .tasks-container::-webkit-scrollbar-thumb, #archived-tasks-list::-webkit-scrollbar-thumb, #task-detail-bottom-sheet::-webkit-scrollbar-thumb, #bs-change-log-list::-webkit-scrollbar-thumb {
             background: #cbd5e1; /* Tailwind gray-400 */
             border-radius: 10px;
         }
-        .tasks-container::-webkit-scrollbar-thumb:hover, #archived-tasks-list::-webkit-scrollbar-thumb:hover, #task-detail-bottom-sheet::-webkit-scrollbar-thumb:hover {
+        .tasks-container::-webkit-scrollbar-thumb:hover, #archived-tasks-list::-webkit-scrollbar-thumb:hover, #task-detail-bottom-sheet::-webkit-scrollbar-thumb:hover, #bs-change-log-list::-webkit-scrollbar-thumb:hover {
             background: #9ca3af; /* Tailwind gray-500 */
         }
         .line-clamp-1, .line-clamp-2 {
@@ -71,6 +71,24 @@
             pointer-events: none;
             z-index: 2000;
         }
+        /* Change Log styling */
+        #bs-change-log-container {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, opacity 0.3s ease-out, margin-top 0.4s ease-out, padding-top 0.4s ease-out;
+        }
+        #bs-change-log-container.visible {
+            max-height: 300px; /* Adjust as needed */
+            opacity: 1;
+            margin-top: 0.75rem; /* mt-3 */
+            padding-top: 0.75rem; /* pt-3 */
+        }
+        #bs-change-log-list {
+            max-height: 250px; /* Ensure scrollability within the expanded container */
+            overflow-y: auto;
+        }
+
 
     </style>
     <script>
@@ -257,6 +275,18 @@
         <div id="bs-task-blocked-status" class="detail-item text-sm mb-2" style="display: none;"><strong>Trạng thái:</strong> <span class="bs-blocked-text text-red-600 font-semibold">BỊ CHẶN</span></div>
         <div id="bs-task-block-reason" class="detail-item text-sm mb-2" style="display: none;"><strong class="block text-slate-600">Lý do chặn:</strong> <p class="text-slate-700"></p></div>
         <div id="bs-task-created-at" class="detail-item text-xs text-slate-500 mt-3 pt-2 border-t border-slate-200" style="display: none;"><strong>Ngày tạo:</strong> <span></span></div>
+        <div id="bs-task-updated-at" class="detail-item text-xs text-slate-500" style="display: none;"><strong>Cập nhật cuối:</strong> <span></span></div>
+        
+        <div class="mt-4 pt-3 border-t border-slate-200">
+            <button id="bs-toggle-history-btn" class="text-sm text-sky-600 hover:text-sky-700 font-medium mb-2">Xem Lịch Sử Thay Đổi</button>
+            <div id="bs-change-log-container" class="hidden">
+                 <h4 class="text-md font-semibold text-slate-700 mb-2">Lịch sử:</h4>
+                <div id="bs-change-log-list" class="space-y-2 text-xs text-slate-600">
+                    {/* Change log entries will be populated here */}
+                </div>
+            </div>
+        </div>
+
         <button id="close-bottom-sheet-btn" class="w-full mt-5 bg-slate-500 hover:bg-slate-600 text-white font-medium py-2.5 px-4 rounded-md text-sm">Đóng</button>
     </div>
 
@@ -265,7 +295,7 @@
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
       import {
           getFirestore, collection, addDoc, query, onSnapshot,
-          doc, updateDoc, deleteDoc, serverTimestamp, deleteField
+          doc, updateDoc, deleteDoc, serverTimestamp, deleteField, arrayUnion
       } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 
       const firebaseConfig = {
@@ -344,7 +374,11 @@
       const bsTaskBlockedStatus = document.getElementById('bs-task-blocked-status');
       const bsTaskBlockReason = document.getElementById('bs-task-block-reason').querySelector('p');
       const bsTaskCreatedAt = document.getElementById('bs-task-created-at');
+      const bsTaskUpdatedAt = document.getElementById('bs-task-updated-at');
       const closeBottomSheetBtn = document.getElementById('close-bottom-sheet-btn');
+      const bsToggleHistoryBtn = document.getElementById('bs-toggle-history-btn');
+      const bsChangeLogContainer = document.getElementById('bs-change-log-container');
+      const bsChangeLogList = document.getElementById('bs-change-log-list');
 
 
       let draggedTask = null;
@@ -360,7 +394,6 @@
       const iconEditPencil = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>`;
       const iconArchiveBoxArrowDown = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M12 18.75v-7.5m0 0L9.75 13.5M12 11.25l2.25 2.25" /></svg>`;
       const iconUnarchive = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 inline mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" /></svg>`;
-      // const iconDelete = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 inline mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12.56 0c.342.052.682.107 1.022.166m0 0L9.26 9m0 0l-.346 9m3.478-9.595c-.342-.052-.682-.107-1.022-.166m0 0c-.342.052-.682-.107-1.022-.166m6.638 0c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12.56 0c.342.052.682.107 1.022.166m-1.022-.165L9.26 9" /></svg>`;
       const iconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>`;
       const iconArrowRight = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>`;
       const iconCheck = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`;
@@ -377,6 +410,11 @@
           const correctedDate = new Date(date.getTime() + userTimezoneOffset);
           return correctedDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
       }
+      function formatDateTimeForDisplay(dateObj) {
+        if (!dateObj) return 'N/A';
+        return dateObj.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      }
+
       function getTodayDateString() {
         const today = new Date();
         const year = today.getFullYear();
@@ -439,11 +477,22 @@
       function closeEditModal() { closeModal(editTaskModal); currentEditingTaskId = null; }
       closeEditModalBtn.onclick = closeEditModal;
       cancelEditTaskBtn.onclick = closeEditModal;
+      
       saveEditTaskBtn.addEventListener('click', async () => {
           if (!currentEditingTaskId) return;
-          const updatedTitle = editTaskTitleInput.value.trim(); const updatedDescription = editTaskDescInput.value.trim();
-          const updatedStatus = editTaskStatusInput.value; const updatedPriority = editTaskPriorityInput.value;
-          const updatedDueDate = editTaskDueDateInput.value; const updatedAssignee = editTaskAssigneeInput.value.trim();
+
+          const oldTaskData = allTasks.find(task => task.id === currentEditingTaskId);
+          if (!oldTaskData) {
+              showAlert("Lỗi: Không tìm thấy dữ liệu công việc cũ.");
+              return;
+          }
+
+          const updatedTitle = editTaskTitleInput.value.trim();
+          const updatedDescription = editTaskDescInput.value.trim();
+          const updatedStatus = editTaskStatusInput.value;
+          const updatedPriority = editTaskPriorityInput.value;
+          const updatedDueDate = editTaskDueDateInput.value;
+          const updatedAssignee = editTaskAssigneeInput.value.trim();
           const updatedTagsString = editTaskTagsInput.value.trim();
           const updatedTags = updatedTagsString ? updatedTagsString.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
           const isBlocked = editTaskBlockedCheckbox.checked;
@@ -452,14 +501,56 @@
           if (!updatedTitle) { showAlert("Tiêu đề không được để trống!"); return; }
           if (isBlocked && !blockReason) { showAlert("Vui lòng nhập lý do bị chặn!"); return; }
 
+          const detailedChangesArray = [];
+          const trackableFields = {
+              title: updatedTitle, description: updatedDescription, status: updatedStatus,
+              priority: updatedPriority, dueDate: updatedDueDate, assignee: updatedAssignee,
+              tags: updatedTags, isBlocked: isBlocked, blockReason: blockReason
+          };
+
+          for (const field in trackableFields) {
+              let oldValue = oldTaskData[field];
+              let newValue = trackableFields[field];
+
+              if (field === 'tags') { 
+                  oldValue = Array.isArray(oldValue) ? oldValue.slice().sort() : [];
+                  newValue = Array.isArray(newValue) ? newValue.slice().sort() : [];
+                  if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+                      detailedChangesArray.push({ field, oldValue: oldTaskData[field] || [], newValue: trackableFields[field] });
+                  }
+              } else {
+                  oldValue = oldValue === undefined || oldValue === null ? "" : oldValue; 
+                  newValue = newValue === undefined || newValue === null ? "" : newValue;
+                  
+                  if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
+                      if (Boolean(oldValue) !== Boolean(newValue)) {
+                          detailedChangesArray.push({ field, oldValue: Boolean(oldTaskData[field]), newValue: Boolean(trackableFields[field]) });
+                      }
+                  } else if (String(oldValue) !== String(newValue)) {
+                       detailedChangesArray.push({ field, oldValue: oldTaskData[field] || "", newValue: trackableFields[field] });
+                  }
+              }
+          }
+          
+          const updatePayload = {
+              title: updatedTitle, description: updatedDescription, status: updatedStatus,
+              priority: updatedPriority, dueDate: updatedDueDate, assignee: updatedAssignee,
+              tags: updatedTags, isBlocked: isBlocked, blockReason: blockReason,
+              updatedAt: serverTimestamp()
+          };
+
+          if (detailedChangesArray.length > 0) {
+              const changeLogEntry = {
+                  timestamp: new Date(), // Use client-side timestamp for arrayUnion
+                  userId: "System", 
+                  changes: detailedChangesArray
+              };
+              updatePayload.changeLog = arrayUnion(changeLogEntry);
+          }
+
           try {
               const taskRef = doc(db, TASKS_COLLECTION, currentEditingTaskId);
-              await updateDoc(taskRef, {
-                  title: updatedTitle, description: updatedDescription, status: updatedStatus,
-                  priority: updatedPriority, dueDate: updatedDueDate, assignee: updatedAssignee,
-                  tags: updatedTags, isBlocked: isBlocked, blockReason: blockReason,
-                  updatedAt: serverTimestamp()
-              });
+              await updateDoc(taskRef, updatePayload);
               showAlert("Cập nhật công việc thành công!"); closeEditModal();
           } catch (error) { console.error("Error updating task:", error); showAlert("Lỗi cập nhật task: " + error.message); }
       });
@@ -531,7 +622,7 @@
         if(taskData.dueDate) {
             const dueDateSpan = bsTaskDueDate.querySelector('span');
             dueDateSpan.textContent = formatDateForDisplay(taskData.dueDate);
-            dueDateSpan.className = 'text-slate-600'; // Reset classes
+            dueDateSpan.className = 'text-slate-600'; 
             const today = getTodayDateString();
             if (taskData.dueDate < today) {
                 dueDateSpan.classList.add('text-red-600', 'font-semibold');
@@ -570,8 +661,37 @@
 
         bsTaskCreatedAt.style.display = (taskData.createdAt && taskData.createdAt.toDate) ? 'block' : 'none';
         if (taskData.createdAt && taskData.createdAt.toDate) {
-            bsTaskCreatedAt.querySelector('span').textContent = formatDateForDisplay(taskData.createdAt.toDate().toISOString().split('T')[0]) + " " + taskData.createdAt.toDate().toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+            bsTaskCreatedAt.querySelector('span').textContent = formatDateTimeForDisplay(taskData.createdAt.toDate());
         }
+        
+        bsTaskUpdatedAt.style.display = (taskData.updatedAt && taskData.updatedAt.toDate && taskData.createdAt?.toMillis() !== taskData.updatedAt?.toMillis()) ? 'block' : 'none';
+        if (taskData.updatedAt && taskData.updatedAt.toDate && taskData.createdAt?.toMillis() !== taskData.updatedAt?.toMillis()) {
+             bsTaskUpdatedAt.querySelector('span').textContent = formatDateTimeForDisplay(taskData.updatedAt.toDate());
+        }
+
+        // Populate Change Log
+        bsChangeLogList.innerHTML = ''; // Clear previous logs
+        if (taskData.changeLog && taskData.changeLog.length > 0) {
+            const sortedLog = [...taskData.changeLog].sort((a,b) => (b.timestamp?.toDate ? b.timestamp.toDate().getTime() : 0) - (a.timestamp?.toDate ? a.timestamp.toDate().getTime() : 0));
+            sortedLog.forEach(logEntry => {
+                const logItem = document.createElement('div');
+                logItem.className = 'p-2 border-b border-slate-100 last:border-b-0';
+                
+                const time = logEntry.timestamp?.toDate ? formatDateTimeForDisplay(logEntry.timestamp.toDate()) : 'Không rõ thời gian';
+                const user = logEntry.userId || 'Không rõ người dùng';
+                
+                let changesHtml = `<p class="text-xs text-slate-500 mb-1">${time} - bởi ${user}:</p><ul class="list-disc list-inside pl-2 space-y-0.5">`;
+                logEntry.changes.forEach(change => {
+                    changesHtml += `<li class="text-xs"><span class="font-medium text-slate-600">${change.field}:</span> <span class="text-slate-500 line-through">${String(change.oldValue)}</span> → <span class="text-slate-700">${String(change.newValue)}</span></li>`;
+                });
+                changesHtml += `</ul>`;
+                logItem.innerHTML = changesHtml;
+                bsChangeLogList.appendChild(logItem);
+            });
+        } else {
+            bsChangeLogList.innerHTML = '<p class="text-xs text-slate-500 italic">Không có lịch sử thay đổi nào.</p>';
+        }
+        bsChangeLogContainer.classList.remove('hidden'); // Show if there's log or "no log" message
 
         bottomSheetOverlay.classList.remove('hidden', 'opacity-0');
         bottomSheetOverlay.classList.add('opacity-100');
@@ -586,10 +706,21 @@
         setTimeout(() => {
             bottomSheetOverlay.classList.add('hidden');
             bottomSheet.classList.add('hidden');
+            bsChangeLogContainer.classList.add('hidden'); // Hide log on close
+            bsToggleHistoryBtn.textContent = 'Xem Lịch Sử Thay Đổi';
         }, 300);
       }
       closeBottomSheetBtn.addEventListener('click', closeBottomSheet);
       bottomSheetOverlay.addEventListener('click', closeBottomSheet);
+      bsToggleHistoryBtn.addEventListener('click', () => {
+          bsChangeLogContainer.classList.toggle('visible');
+          bsChangeLogContainer.classList.toggle('hidden');
+          if (bsChangeLogContainer.classList.contains('visible')) {
+              bsToggleHistoryBtn.textContent = 'Ẩn Lịch Sử Thay Đổi';
+          } else {
+              bsToggleHistoryBtn.textContent = 'Xem Lịch Sử Thay Đổi';
+          }
+      });
 
 
       window.onclick = function(event) {
@@ -606,7 +737,7 @@
               const wipLimit = parseInt(column.dataset.wipLimit, 10);
               
               let unblockedTaskCountInColumn = 0;
-              allTasks.filter(t => !t.isArchived).forEach(task => { // Count only non-archived tasks for WIP
+              allTasks.filter(t => !t.isArchived).forEach(task => { 
                   if (task.status === status && !task.isBlocked) {
                       unblockedTaskCountInColumn++;
                   }
@@ -653,8 +784,11 @@
         try {
             await addDoc(collection(db, TASKS_COLLECTION), {
                 title, description, status, priority, dueDate, assignee,
-                tags: tagsArray, isBlocked: false, blockReason: "", createdAt: serverTimestamp(), 
-                isPinned: false, order: Date.now(), isArchived: false 
+                tags: tagsArray, isBlocked: false, blockReason: "", 
+                createdAt: serverTimestamp(), 
+                updatedAt: serverTimestamp(), 
+                isPinned: false, order: Date.now(), isArchived: false,
+                changeLog: [] 
             });
             showAlert("Thêm công việc mới thành công!"); closeAddTaskModal();
         } catch (e) { console.error("Error adding task: ", e); showAlert("Lỗi thêm task: " + e.message); }
@@ -667,7 +801,8 @@
               await updateDoc(taskRef, {
                   isArchived: true,
                   archivedAt: serverTimestamp(),
-                  originalStatus: currentStatus 
+                  originalStatus: currentStatus,
+                  updatedAt: serverTimestamp() 
               });
               showAlert("Đã lưu trữ công việc.");
           } catch (error) {
@@ -685,7 +820,8 @@
                   status: originalStatus || 'todo', 
                   order: Date.now(), 
                   archivedAt: deleteField(), 
-                  originalStatus: deleteField() 
+                  originalStatus: deleteField(),
+                  updatedAt: serverTimestamp() 
               });
               showAlert("Đã khôi phục công việc.");
               closeArchivedTasksModal(); 
@@ -694,16 +830,6 @@
               showAlert("Lỗi khi khôi phục công việc: " + error.message);
           }
       }
-
-      async function deleteArchivedTaskPermanently(taskId) {
-          if (!taskId) return;
-          // Re-implement confirm for this critical action if needed, or remove direct permanent delete
-          // For now, let's assume a direct delete from archive is not available as per previous request.
-          // If it IS needed, a confirm dialog is crucial.
-          // This function might be redundant now if we removed the button.
-          console.warn("Permanent delete from archive not implemented based on last request.");
-      }
-
 
       function createTaskCard(taskData) {
           const taskCard = document.createElement('div');
@@ -744,7 +870,6 @@
           editButton.onclick = (e) => { e.stopPropagation(); openEditModal(taskData); }; 
           cardActions.appendChild(editButton);
           
-          // Archive button only for 'done' tasks
           if (taskData.status === 'done') {
               const archiveButton = document.createElement('button');
               archiveButton.className = 'p-1 rounded text-slate-400 hover:bg-slate-200 hover:text-purple-600';
@@ -758,7 +883,6 @@
           cardHeader.appendChild(cardActions);
           taskCard.appendChild(cardHeader);
 
-          // Description Snippet
           if (taskData.description && taskData.description.trim() !== '') {
             const descSnippet = document.createElement('p');
             descSnippet.className = 'task-card-description-snippet text-xs text-slate-600 mt-0.5 mb-1.5 line-clamp-2 leading-snug';
@@ -835,11 +959,16 @@
               moveActions.appendChild(moveToDoneBtn);
           }
           cardFooter.appendChild(moveActions);
+          
           const timestamp = document.createElement('span');
           timestamp.className = 'task-timestamp text-xs text-slate-400';
-          timestamp.textContent = taskData.createdAt && taskData.createdAt.toDate ?
-            formatDateForDisplay(taskData.createdAt.toDate().toISOString().split('T')[0])
-            : 'N/A';
+          if (taskData.updatedAt && taskData.updatedAt.toDate && taskData.createdAt?.toMillis() !== taskData.updatedAt?.toMillis()) {
+             timestamp.textContent = `Sửa: ${formatDateForDisplay(taskData.updatedAt.toDate().toISOString().split('T')[0])}`;
+          } else if (taskData.createdAt && taskData.createdAt.toDate) {
+             timestamp.textContent = `Tạo: ${formatDateForDisplay(taskData.createdAt.toDate().toISOString().split('T')[0])}`;
+          } else {
+             timestamp.textContent = 'N/A';
+          }
           cardFooter.appendChild(timestamp);
           taskCard.appendChild(cardFooter);
 
@@ -852,7 +981,10 @@
         const newPinnedState = !taskData.isPinned;
         try {
             const taskRef = doc(db, TASKS_COLLECTION, taskData.id);
-            await updateDoc(taskRef, { isPinned: newPinnedState });
+            await updateDoc(taskRef, { 
+                isPinned: newPinnedState,
+                updatedAt: serverTimestamp() 
+            });
         } catch (error) {
             console.error("Error toggling pin state:", error);
             showAlert("Lỗi khi ghim/bỏ ghim công việc.");
@@ -893,27 +1025,30 @@
           try {
               const taskRef = doc(db, TASKS_COLLECTION, taskId);
               const taskToUpdate = allTasks.find(t => t.id === taskId);
-              await updateDoc(taskRef, { 
+              
+              const updatePayload = { 
                   status: newStatus, 
                   updatedAt: serverTimestamp(), 
                   isPinned: (newStatus === 'done' ? false : (taskToUpdate?.isPinned || false)),
-                  order: Date.now() 
-                });
+                  order: Date.now()
+              };
+
+              if (oldStatus !== newStatus) {
+                 const changeLogEntry = {
+                      timestamp: new Date(), 
+                      userId: "System", 
+                      changes: [{ field: "status", oldValue: oldStatus, newValue: newStatus }]
+                  };
+                  updatePayload.changeLog = arrayUnion(changeLogEntry);
+              }
+
+              await updateDoc(taskRef, updatePayload);
               
               if (newStatus === 'done' && oldStatus !== 'done') {
                   triggerConfetti(); 
               }
               return true;
           } catch (error) { console.error("Error updating task status:", error); showAlert("Lỗi cập nhật trạng thái task: " + error.message); return false; }
-      }
-      async function deleteTask(taskId) { // This function is currently not directly called by a delete button on the card
-          // It's kept for potential future use or if archiveTask decides to permanently delete in some cases.
-          // For now, permanent deletion is handled in deleteArchivedTaskPermanently
-          console.warn("deleteTask function was called, but primary deletion is via archive and then permanent delete from archive list.");
-          // If you want this to be a direct delete:
-          // if (!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn công việc này không?")) return;
-          // try { await deleteDoc(doc(db, TASKS_COLLECTION, taskId)); showAlert("Xóa công việc thành công!"); }
-          // catch (error) { console.error("Error deleting task:", error); showAlert("Lỗi xóa task: " + error.message); }
       }
 
       function handleDragStart(event) {
@@ -970,7 +1105,7 @@
               const newStatus = targetColumnEl.dataset.status;
 
               if (oldStatus !== newStatus) {
-                  await updateTaskStatusInFirestore(taskId, newStatus, oldStatus);
+                  await updateTaskStatusInFirestore(taskId, newStatus, oldStatus); 
               } else { 
                   const mouseY = event.clientY;
                   const draggedTaskData = allTasks.find(t => t.id === taskId);
@@ -1015,8 +1150,10 @@
                   }
 
                   if (draggedTaskData.order !== newOrder) {
-                    console.log(`Reordering task ${taskId} in column ${newStatus} from order ${draggedTaskData.order} to new order: ${newOrder}`);
-                    await updateDoc(doc(db, TASKS_COLLECTION, taskId), { order: newOrder, updatedAt: serverTimestamp() });
+                    await updateDoc(doc(db, TASKS_COLLECTION, taskId), { 
+                        order: newOrder, 
+                        updatedAt: serverTimestamp() 
+                    });
                   }
               }
           });
@@ -1223,7 +1360,6 @@
 
       const q = query(collection(db, TASKS_COLLECTION));
       onSnapshot(q, (querySnapshot) => {
-          console.log("Firestore snapshot received:", querySnapshot.docs.length, "documents");
           allTasks = [];
           querySnapshot.forEach((docSnap) => { allTasks.push({ ...docSnap.data(), id: docSnap.id }); });
           allTasks.sort((a, b) => {
