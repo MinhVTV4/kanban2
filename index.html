@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Đã Sửa Lỗi)</title>
+    <title>Bảng Kanban Task (Tối Ưu Cột)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -15,7 +15,7 @@
             flex-direction: column;
             align-items: center;
             line-height: 1.6;
-            overscroll-behavior: none; /* Prevent pull-to-refresh issues with swipe */
+            overscroll-behavior: none;
         }
 
         .app-container {
@@ -24,7 +24,6 @@
             margin-bottom: 20px;
         }
 
-        /* --- App Header --- */
         #app-main-header {
             text-align: center;
             margin-bottom: 20px;
@@ -32,97 +31,55 @@
         #app-main-header h1 {
             color: #1890ff;
             font-weight: 600;
-            font-size: 1.75rem; /* Adjusted size */
+            font-size: 1.75rem;
             margin: 0;
         }
 
-        /* --- Actions Bar (Toggle Filter & View Archive) --- */
         .actions-bar-container {
             background-color: #fff;
-            padding: 12px 20px; /* Slightly reduced padding */
+            padding: 12px 20px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             margin-bottom: 20px;
             display: flex;
-            justify-content: flex-end; /* Align buttons to the right */
-            gap: 10px; /* Space between buttons */
+            justify-content: flex-end;
+            gap: 10px;
         }
+        .actions-bar-container button {
+            padding: 10px 18px; color: white; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 0.9rem; font-weight: 500;
+            transition: background-color 0.3s ease; display: flex; align-items: center;
+        }
+        .actions-bar-container button .icon { margin-right: 8px; }
+        #toggle-filter-bar-btn { background-color: #52c41a; }
+        #toggle-filter-bar-btn:hover { background-color: #389e0d; }
+        #view-archived-btn { background-color: #722ed1; }
+        #view-archived-btn:hover { background-color: #531dab; }
 
-        .actions-bar-container button { /* Common style for buttons in this bar */
-            padding: 10px 18px; /* Adjusted padding */
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem; /* Adjusted font size */
-            font-weight: 500;
-            transition: background-color 0.3s ease;
-            display: flex;
-            align-items: center;
-        }
-        .actions-bar-container button .icon {
-            margin-right: 8px;
-        }
-
-        #toggle-filter-bar-btn {
-            background-color: #52c41a; /* Green */
-        }
-        #toggle-filter-bar-btn:hover {
-            background-color: #389e0d;
-        }
-        #view-archived-btn {
-            background-color: #722ed1; /* Purple */
-        }
-        #view-archived-btn:hover {
-            background-color: #531dab;
-        }
-
-
-        /* Filter Bar Styling (collapsible) */
         .filter-bar {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            margin-bottom: 30px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            align-items: center;
-            overflow: hidden;
-            max-height: 0; /* Collapsed by default */
-            opacity: 0;
-            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out, margin-bottom 0.5s ease-in-out;
-            padding-top: 0;
-            padding-bottom: 0;
-            margin-bottom: 0; /* No margin when collapsed */
+            background-color: #fff; padding: 20px; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); margin-bottom: 30px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px; align-items: center; overflow: hidden; max-height: 0;
+            opacity: 0; transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out, margin-bottom 0.5s ease-in-out;
+            padding-top: 0; padding-bottom: 0; margin-bottom: 0;
         }
         .filter-bar.filter-bar-visible {
-            max-height: 1000px; /* Large enough to accommodate content */
-            opacity: 1;
-            padding-top: 20px; /* Restore padding */
-            padding-bottom: 20px; /* Restore padding */
-            margin-bottom: 30px; /* Restore margin */
+            max-height: 1000px; opacity: 1; padding-top: 20px;
+            padding-bottom: 20px; margin-bottom: 30px;
         }
-
         .filter-bar .form-group { display: flex; flex-direction: column; }
         .filter-bar label { font-size: 0.85rem; color: #595959; margin-bottom: 5px; }
-        .filter-bar input[type="text"],
-        .filter-bar select {
+        .filter-bar input[type="text"], .filter-bar select {
             padding: 10px; border: 1px solid #d9d9d9; border-radius: 6px;
             font-size: 0.95rem; width: 100%; box-sizing: border-box;
         }
-        .filter-bar input[type="text"]:focus,
-        .filter-bar select:focus {
+        .filter-bar input[type="text"]:focus, .filter-bar select:focus {
             border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2); outline: none;
         }
-        .filter-bar .actions {
-            grid-column: 1 / -1; display: flex; gap: 10px; justify-content: flex-end;
-        }
-         @media (min-width: 992px) {
-            .filter-bar .actions { grid-column: auto; grid-row: 1; align-self: end; }
-        }
-        .filter-bar button { /* Buttons inside filter bar */
+        .filter-bar .actions { grid-column: 1 / -1; display: flex; gap: 10px; justify-content: flex-end; }
+         @media (min-width: 992px) { .filter-bar .actions { grid-column: auto; grid-row: 1; align-self: end; } }
+        .filter-bar button {
             padding: 10px 15px; background-color: #1890ff; color: white;
             border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem;
             font-weight: 500; transition: background-color 0.3s ease;
@@ -131,38 +88,18 @@
         .filter-bar button.clear-filter-btn:hover { background-color: #f5222d; }
         .filter-bar button:hover { background-color: #40a9ff; }
 
-
-        /* FAB for Add Task */
         .fab-add-task {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background-color: #1890ff;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 28px;
-            line-height: 60px; /* Center icon vertically */
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            z-index: 999;
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            background-color: #1890ff; color: white; border: none; border-radius: 50%;
+            font-size: 28px; line-height: 60px; text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease; z-index: 999;
         }
-        .fab-add-task:hover {
-            background-color: #40a9ff;
-            transform: scale(1.1);
-        }
+        .fab-add-task:hover { background-color: #40a9ff; transform: scale(1.1); }
 
-        /* --- Kanban Mobile Tabs --- */
         #kanban-mobile-tabs {
-            display: none; /* Hidden by default, shown on mobile */
-            background-color: #fff;
-            border-bottom: 1px solid #e2e8f0;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: none; background-color: #fff; border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .mobile-tab-button {
             flex-grow: 1; text-align: center; padding: 12px 8px;
@@ -172,25 +109,24 @@
             display: flex; align-items: center; justify-content: center;
         }
         .mobile-tab-button .icon { margin-right: 6px; width: 16px; height: 16px; }
-        .mobile-tab-button.active-tab {
-            border-bottom-color: #1890ff; color: #1890ff;
-        }
+        .mobile-tab-button.active-tab { border-bottom-color: #1890ff; color: #1890ff; }
         .mobile-tab-button#tab-todo.active-tab { border-bottom-color: #eb2f96; color: #eb2f96; }
         .mobile-tab-button#tab-inprogress.active-tab { border-bottom-color: #faad14; color: #faad14; }
         .mobile-tab-button#tab-done.active-tab { border-bottom-color: #52c41a; color: #52c41a; }
 
-
-        /* Kanban Board Styling */
         .kanban-board {
             display: flex;
-            gap: 15px;
-            justify-content: space-around;
+            gap: 10px; /* Reduced gap */
             flex-wrap: wrap;
+            align-items: flex-start; /* Align columns at the top */
         }
         .kanban-column {
+            flex: 1; /* Allow columns to grow and shrink */
+            min-width: 320px; /* Minimum width before wrapping or becoming too small */
+            /* max-width: 480px; /* Optional: constrain max width if needed */
             border-radius: 8px; padding: 20px;
-            width: 350px; min-height: 450px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            display: flex; flex-direction: column; transition: background-color 0.3s ease, border 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column;
+            transition: background-color 0.3s ease, border 0.3s ease;
         }
         .kanban-column#todo { background-color: #fff0f6; }
         .kanban-column#inprogress { background-color: #fffbe6; }
@@ -198,52 +134,45 @@
 
         .kanban-column .column-header {
             display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 15px; border-bottom: 2px solid #e8e8e8;
+            margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e8e8e8;
         }
         .kanban-column .column-header .title-group {
-            display: flex; align-items: center;
-            font-size: 1.3rem; font-weight: 600;
+            display: flex; align-items: center; font-size: 1.3rem; font-weight: 600;
         }
-        .kanban-column .column-header .column-icon {
-            width: 20px; height: 20px; margin-right: 10px;
-        }
+        .kanban-column .column-header .column-icon { width: 20px; height: 20px; margin-right: 10px; }
         .kanban-column#todo .column-header .title-group { color: #eb2f96; }
         .kanban-column#inprogress .column-header .title-group { color: #faad14; }
         .kanban-column#done .column-header .title-group { color: #52c41a; }
-
         .kanban-column h2 {
             margin: 0; font-size: inherit; font-weight: inherit; color: inherit;
             border-bottom: none; padding-bottom: 0;
         }
         .kanban-column .task-count-badge {
-            font-size: 0.8rem; color: #fff; background-color: #8c8c8c;
-            padding: 3px 8px; border-radius: 12px; font-weight: 500;
-            min-width: 24px; text-align: center;
+            font-size: 0.8rem; color: #fff; padding: 3px 8px; border-radius: 12px;
+            font-weight: 500; min-width: 24px; text-align: center;
         }
         .kanban-column#todo .task-count-badge { background-color: #eb2f96; }
         .kanban-column#inprogress .task-count-badge { background-color: #faad14; }
         .kanban-column#done .task-count-badge { background-color: #52c41a; }
 
-
         .tasks-container {
-            background-color: #fff;
-            border-radius: 6px; padding: 15px;
+            /* background-color: #fff; Removed to let column color show through */
+            /* border-radius: 6px; Removed */
+            padding: 0; /* Removed padding, tasks will be spaced by their own margins */
             min-height: 250px; flex-grow: 1; transition: background-color 0.2s ease;
-            border: 1px dashed transparent;
+            /* border: 1px dashed transparent; Kept for drag-over indication if needed, but might be redundant */
         }
         .tasks-container.empty {
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center;
-            color: #aaa; font-style: italic; min-height: 150px;
-            background-color: rgba(255, 255, 255, 0.7);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; color: #888; /* Darker for better contrast on light backgrounds */
+            font-style: italic; min-height: 150px;
+            /* background-color: rgba(255, 255, 255, 0.7); Removed */
+            padding: 20px 0; /* Add some padding if container padding is 0 */
         }
         .tasks-container.empty .empty-icon {
             width: 40px; height: 40px; margin-bottom: 10px; opacity: 0.5;
         }
 
-
-        /* Task Card Styling */
         .task-card {
             background-color: #ffffff; border: 1px solid #e8e8e8; border-left: 6px solid transparent;
             border-radius: 6px; padding: 15px 20px; margin-bottom: 12px; cursor: grab;
@@ -254,9 +183,7 @@
         .task-card.priority-low { border-left-color: #52c41a; }
         .task-card.due-overdue { background-color: #fff1f0; border-color: #ffccc7; }
         .task-card.due-soon { background-color: #fffbe6; border-color: #ffe58f; }
-        .task-card.blocked {
-            background-color: #fff1f0; border-left-color: #a8071a !important; border-color: #ffccc7;
-        }
+        .task-card.blocked { background-color: #fff1f0; border-left-color: #a8071a !important; border-color: #ffccc7; }
         .blocked-icon-wrapper { display: flex; align-items: center; margin-top: 8px; }
         .blocked-icon {
             color: #a8071a; font-weight: bold; cursor: help; font-size: 0.8em; margin-right: 6px;
@@ -297,7 +224,6 @@
         }
         .task-card .delete-btn:hover { color: #cf1322; background-color: #fff1f0; }
 
-        /* Drag and Drop Styling */
         .dragging { opacity: 0.4; border: 2px dashed #1890ff; }
         .drag-over-column .tasks-container { background-color: #e6f7ff !important; border: 1px dashed #91d5ff; }
         .wip-limit-exceeded .tasks-container { border: 2px dashed #ff4d4f !important; background-color: #fff1f0 !important; }
@@ -306,7 +232,6 @@
             content: " (WIP Limit!)"; color: #ff4d4f; font-weight: bold; font-size: 0.8em; margin-left: 5px;
         }
 
-        /* Modal Styling */
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
             overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;
@@ -319,7 +244,6 @@
         #archived-tasks-modal .modal-content { max-width: 700px; }
         #archived-tasks-list { max-height: 60vh; overflow-y: auto; }
         #archived-tasks-list p { margin-top: 10px; text-align: center; color: #595959; }
-
         @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         .modal-content h3 {
             margin-top: 0; color: #1890ff; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; font-weight: 600;
@@ -359,36 +283,16 @@
         }
         .close-modal-btn:hover, .close-modal-btn:focus { color: #595959; text-decoration: none; cursor: pointer; }
 
-        /* Custom Alert Styling */
-        .custom-alert-overlay { /* ... */ }
-        .custom-alert-box { /* ... */ }
-        .custom-alert-box p { /* ... */ }
-        .custom-alert-box button { /* ... */ }
-        .custom-alert-box button:hover { /* ... */ }
-
-        @media (max-width: 767px) { /* md breakpoint for mobile */
-            #kanban-mobile-tabs {
-                display: flex;
-            }
-            .kanban-board {
-                display: block;
-            }
+        @media (max-width: 767px) {
+            #kanban-mobile-tabs { display: flex; }
+            .kanban-board { display: block; }
             .kanban-column {
-                width: 100%;
-                margin-bottom: 0;
-                display: none; /* Hide all columns by default on mobile */
-                background-color: #fff; /* Reset column background on mobile */
-                padding-top: 10px;
+                width: 100%; margin-bottom: 0; display: none;
+                background-color: #fff; padding-top: 10px;
             }
-            .kanban-column.active-mobile-column {
-                display: flex; /* Show only the active column */
-            }
-            .kanban-column .column-header { /* Hide desktop column header on mobile */
-                display: none;
-            }
-             .tasks-container.empty {
-                background-color: transparent;
-            }
+            .kanban-column.active-mobile-column { display: flex; }
+            .kanban-column .column-header { display: none; }
+            .tasks-container.empty { background-color: transparent; }
             .fab-add-task { bottom: 20px; right: 20px; width: 56px; height: 56px; font-size: 24px; line-height: 56px; }
             .actions-bar-container { justify-content: space-between; }
         }
@@ -957,7 +861,7 @@
       // === Filtering Logic ===
       toggleFilterBarBtn.addEventListener('click', () => {
           filterBar.classList.toggle('filter-bar-visible');
-          const buttonTextSpan = toggleFilterBarBtn.querySelector('#toggle-filter-text'); // Ensure this span exists
+          const buttonTextSpan = toggleFilterBarBtn.querySelector('#toggle-filter-text'); 
           if (filterBar.classList.contains('filter-bar-visible')) {
               if(buttonTextSpan) buttonTextSpan.textContent = 'Ẩn Bộ Lọc';
           } else {
@@ -1037,9 +941,9 @@
                   const columnTitleElement = column.querySelector('.column-header h2');
                   const tabButton = document.getElementById(`tab-${status}`);
                   let columnDisplayName = status;
-                  if (columnTitleElement && columnTitleElement.offsetParent !== null) { // Visible on desktop
+                  if (columnTitleElement && columnTitleElement.offsetParent !== null) { 
                       columnDisplayName = columnTitleElement.textContent.trim();
-                  } else if (tabButton) { // Fallback for mobile tab name
+                  } else if (tabButton) { 
                      columnDisplayName = Array.from(tabButton.childNodes)
                                    .filter(node => node.nodeType === Node.TEXT_NODE)
                                    .map(node => node.textContent.trim())
