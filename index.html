@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Tailwind CSS - Cập Nhật WIP & Chặn)</title>
+    <title>Bảng Kanban Task (Pháo Hoa & WIP Nâng Cao)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -34,49 +34,45 @@
         .line-clamp-1 { -webkit-line-clamp: 1; }
         .line-clamp-2 { -webkit-line-clamp: 2; }
 
-        .dragging { opacity: 0.5 !important; border: 2px dashed #3b82f6 !important; }
-        .drag-over-column .tasks-container { background-color: #eff6ff !important; border: 1px dashed #93c5fd !important; }
-        .wip-limit-exceeded .tasks-container { border: 2px dashed #ef4444 !important; background-color: #fee2e2 !important; }
+        .dragging { opacity: 0.5 !important; border: 2px dashed #3b82f6 !important; } 
+        .drag-over-column .tasks-container { background-color: #eff6ff !important; border: 1px dashed #93c5fd !important; } 
+        .wip-limit-exceeded .tasks-container { border: 2px dashed #ef4444 !important; background-color: #fee2e2 !important; } 
         
-        /* WIP Limit Indicator Text for column header badge */
         .column-at-wip-limit > .column-header .task-count-badge::after {
             content: " (WIP Limit!)";
-            color: #ef4444; /* Tailwind red-500 */
-            font-weight: 600; /* semibold */
-            font-size: 0.7rem; /* Smaller than badge text */
-            margin-left: 0.25rem; /* ml-1 */
+            color: #ef4444; 
+            font-weight: 600; 
+            font-size: 0.7rem; 
+            margin-left: 0.25rem;
         }
-         /* Red border for the entire column when WIP limit is reached */
         .column-at-wip-limit {
-            border: 2px solid #ef4444 !important; /* red-500, !important to override other borders */
+            border: 2px solid #ef4444 !important; 
         }
 
-
-        /* Filter bar transition */
         .filter-bar {
-            max-height: 0;
-            opacity: 0;
-            padding-top: 0;
-            padding-bottom: 0;
-            margin-bottom: 0;
+            max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0;
             overflow: hidden;
             transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding-top 0.4s ease-out, padding-bottom 0.4s ease-out, margin-bottom 0.4s ease-out;
         }
         .filter-bar.filter-bar-visible {
-            max-height: 1000px; 
-            opacity: 1;
-            padding-top: 1.25rem; 
-            padding-bottom: 1.25rem;
-            margin-bottom: 1.5rem; 
+            max-height: 1000px; opacity: 1; padding-top: 1.25rem; 
+            padding-bottom: 1.25rem; margin-bottom: 1.5rem; 
         }
 
-        /* Bottom Sheet transition */
-        #task-detail-bottom-sheet-overlay {
-            transition: opacity 0.3s ease-in-out;
+        #task-detail-bottom-sheet-overlay { transition: opacity 0.3s ease-in-out; }
+        #task-detail-bottom-sheet { transition: transform 0.3s ease-out; }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Make sure it doesn't block interactions */
+            z-index: 2000; /* Above other content but below modals if needed */
         }
-        #task-detail-bottom-sheet {
-            transition: transform 0.3s ease-out;
-        }
+
     </style>
     <script>
       tailwind.config = {
@@ -102,6 +98,7 @@
     </script>
 </head>
 <body class="bg-slate-100 text-slate-800">
+    <canvas id="confetti-canvas"></canvas> 
     <div class="app-container w-full"> 
         <header id="app-main-header" class="text-center mb-6 max-w-screen-xl mx-auto px-4 md:px-6">
             <h1 class="text-3xl font-semibold text-sky-600">Ghi chú Kanban</h1>
@@ -365,6 +362,8 @@
       const iconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>`;
       const iconArrowRight = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>`;
       const iconCheck = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`;
+      const confettiParticles = [];
+
 
       function showAlert(message) { customAlertMessage.textContent = message; customAlertOverlay.classList.remove('hidden'); customAlertOverlay.classList.add('flex'); }
       customAlertOkBtn.addEventListener('click', () => { customAlertOverlay.classList.add('hidden'); customAlertOverlay.classList.remove('flex'); });
@@ -556,21 +555,22 @@
               const status = column.dataset.status;
               const countBadge = column.querySelector('.task-count-badge');
               const wipLimit = parseInt(column.dataset.wipLimit, 10);
-              const currentCount = currentTaskCounts[status] || 0;
               
+              // Calculate unblocked tasks for WIP limit check
+              let unblockedTaskCountInColumn = 0;
+              allTasks.forEach(task => {
+                  if (task.status === status && !task.isBlocked) {
+                      unblockedTaskCountInColumn++;
+                  }
+              });
+
               if (countBadge) {
-                countBadge.textContent = currentCount;
-                // Check if WIP limit text already exists to avoid duplication
-                const existingWipText = column.querySelector('.column-header .wip-limit-text');
-                if (existingWipText) {
-                    existingWipText.remove();
-                }
+                countBadge.textContent = currentTaskCounts[status] || 0; // Total count for display
               }
               
-              column.classList.remove('border-red-500', 'column-at-wip-limit'); // Tailwind class for WIP limit border
-              if (wipLimit !== -1 && currentCount >= wipLimit) {
-                  column.classList.add('border-red-500', 'column-at-wip-limit'); // Apply red border to the whole column
-                  // The CSS ::after pseudo-element on .task-count-badge within .column-at-wip-limit will add the text
+              column.classList.remove('column-at-wip-limit'); 
+              if (wipLimit !== -1 && unblockedTaskCountInColumn >= wipLimit) {
+                  column.classList.add('column-at-wip-limit'); 
               }
           });
       }
@@ -580,20 +580,30 @@
         if (!title.trim()) { showAlert("Tiêu đề không được để trống!"); return; }
         const columnElement = document.getElementById(status);
         if (!columnElement) { showAlert(`Lỗi: Không tìm thấy cột cho trạng thái "${status}".`); return; }
+        
         const wipLimit = parseInt(columnElement.dataset.wipLimit, 10);
-        if (wipLimit !== -1 && currentTaskCounts[status] >= wipLimit) {
-            const h2Element = columnElement.querySelector('.column-header h2');
-            let columnName = status;
-            if (h2Element && h2Element.offsetParent !== null) {
-                columnName = h2Element.textContent.trim();
-            } else {
-                const tabButton = document.getElementById(`tab-${status}`);
-                if (tabButton) {
-                    columnName = Array.from(tabButton.childNodes).filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent.trim()).join('') || status;
+        if (wipLimit !== -1) {
+            let unblockedTasksInColumn = 0;
+            allTasks.forEach(task => {
+                if (task.status === status && !task.isBlocked) {
+                    unblockedTasksInColumn++;
                 }
+            });
+            if (unblockedTasksInColumn >= wipLimit) {
+                const h2Element = columnElement.querySelector('.column-header h2');
+                let columnName = status;
+                if (h2Element && h2Element.offsetParent !== null) {
+                    columnName = h2Element.textContent.trim();
+                } else {
+                    const tabButton = document.getElementById(`tab-${status}`);
+                    if (tabButton) {
+                        columnName = Array.from(tabButton.childNodes).filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent.trim()).join('') || status;
+                    }
+                }
+                showAlert(`Cột "${columnName}" đã đạt giới hạn WIP cho công việc bình thường (${wipLimit}).`); return;
             }
-            showAlert(`Cột "${columnName}" đã đạt giới hạn WIP (${wipLimit}). Không thể thêm task mới.`); return;
         }
+
         const tagsArray = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
         try {
             const docRef = await addDoc(collection(db, TASKS_COLLECTION), {
@@ -609,7 +619,13 @@
           const taskCard = document.createElement('div');
           taskCard.className = `task-card bg-white border border-slate-200 rounded-md p-3 shadow hover:shadow-md transition-shadow flex flex-col relative border-l-4 border-priority-${taskData.priority || 'medium'}`;
           if (taskData.isPinned) taskCard.classList.add('task-pinned', '!border-amber-400', '!bg-amber-50');
-          if (taskData.isBlocked) taskCard.classList.add('blocked', '!bg-red-50', '!border-red-300', '!border-l-red-700');
+          
+          // Apply general blocked class FIRST if task is blocked
+          if (taskData.isBlocked) {
+              taskCard.classList.add('blocked', '!bg-red-50', '!border-red-300', '!border-l-red-700');
+          }
+
+
           taskCard.setAttribute('draggable', 'true');
           taskCard.dataset.id = taskData.id;
           taskCard.dataset.status = taskData.status;
@@ -642,12 +658,21 @@
           taskCard.appendChild(cardHeader);
 
           // Description Snippet
-          if (taskData.description && taskData.description.trim() !== '') {
+          if (taskData.description && taskData.description.trim() !== '' && taskData.description !== taskData.title) {
             const descSnippet = document.createElement('p');
             descSnippet.className = 'task-card-description-snippet text-xs text-slate-600 mt-0.5 mb-1.5 line-clamp-2 leading-snug';
             descSnippet.textContent = taskData.description;
             taskCard.appendChild(descSnippet);
           }
+          
+          // Blocked Indicator ON CARD
+          if (taskData.isBlocked) {
+            const blockedCardIndicator = document.createElement('span');
+            blockedCardIndicator.className = 'self-start mt-1.5 task-blocked-indicator px-2 py-0.5 rounded-full text-xs bg-red-600 text-white font-semibold flex items-center';
+            blockedCardIndicator.innerHTML = `<svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12zm-1-5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm1-4a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>CHẶN`;
+            taskCard.appendChild(blockedCardIndicator);
+          }
+
 
           // Minimal Indicators (Assignee, Due Date, Priority)
           const minimalIndicators = document.createElement('div');
@@ -674,7 +699,7 @@
                   const diffTime = dueDateObj - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                   if (diffDays === 0) { dueDateIndicatorText = "Hôm nay"; dueDateClasses += ' bg-amber-100 text-amber-700';}
                   else if (diffDays === 1) { dueDateIndicatorText = "Ngày mai"; dueDateClasses += ' bg-amber-100 text-amber-700';}
-                  else { dueDateIndicatorText = formatDateForDisplay(dueDate); }
+                  // else { dueDateIndicatorText = formatDateForDisplay(dueDate); } 
               }
               if (dueDateIndicatorText) {
                   const dueDateIndicator = document.createElement('span');
@@ -683,20 +708,10 @@
                   minimalIndicators.appendChild(dueDateIndicator);
               }
           }
-          // Blocked Indicator on Card
-          if (taskData.isBlocked) {
-            const blockedCardIndicator = document.createElement('span');
-            blockedCardIndicator.className = 'task-blocked-indicator px-1.5 py-0.5 rounded text-xs bg-red-500 text-white font-semibold flex items-center';
-            blockedCardIndicator.innerHTML = `<svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12zm-1-5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm1-4a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>CHẶN`;
-            minimalIndicators.appendChild(blockedCardIndicator);
-          }
-
-
           const priorityBadge = document.createElement('span');
           priorityBadge.className = `priority-indicator-badge px-1.5 py-0.5 rounded text-xs text-white bg-priority-${taskData.priority || 'medium'} ml-auto`;
           priorityBadge.textContent = priorityMap[taskData.priority || 'medium'];
           minimalIndicators.appendChild(priorityBadge);
-
 
           if (minimalIndicators.hasChildNodes()) {
               taskCard.appendChild(minimalIndicators);
@@ -707,7 +722,7 @@
           const cardFooter = document.createElement('div');
           cardFooter.className = 'task-card-footer mt-2 pt-1.5 border-t border-slate-200 flex justify-between items-center';
           const moveActions = document.createElement('div');
-          moveActions.className = 'task-move-actions flex gap-1.5';
+          moveActions.className = 'task-move-actions flex gap-1.5'; 
           if (taskData.status !== 'todo') {
               const moveToTodoBtn = document.createElement('button');
               moveToTodoBtn.innerHTML = iconArrowLeft; moveToTodoBtn.title = "Chuyển sang Cần làm";
@@ -758,26 +773,42 @@
       async function updateTaskStatusInFirestore(taskId, newStatus, oldStatus) {
           const columnElement = document.getElementById(newStatus);
           if (!columnElement) { showAlert(`Lỗi: Không tìm thấy cột cho trạng thái "${newStatus}".`); return false; }
+          
           const wipLimit = parseInt(columnElement.dataset.wipLimit, 10);
-          if (wipLimit !== -1 && currentTaskCounts[newStatus] >= wipLimit && newStatus !== oldStatus) {
-             const h2Element = columnElement.querySelector('.column-header h2');
-             let columnName = newStatus;
-             if (h2Element && h2Element.offsetParent !== null) {
-                 columnName = h2Element.textContent.trim();
-             } else {
-                 const tabButton = document.getElementById(`tab-${newStatus}`);
-                 if (tabButton) {
-                     columnName = Array.from(tabButton.childNodes).filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent.trim()).join('') || newStatus;
+          if (wipLimit !== -1 && newStatus !== oldStatus) { // Check WIP only when moving TO a limited column
+            let unblockedTasksInTargetColumn = 0;
+            allTasks.forEach(task => {
+                if (task.status === newStatus && !task.isBlocked) {
+                    unblockedTasksInTargetColumn++;
+                }
+            });
+
+            const taskBeingMoved = allTasks.find(t => t.id === taskId);
+            // Only count task being moved if it's not blocked itself
+            const isTaskBeingMovedUnblocked = taskBeingMoved && !taskBeingMoved.isBlocked;
+
+            if (isTaskBeingMovedUnblocked && unblockedTasksInTargetColumn >= wipLimit) {
+                 const h2Element = columnElement.querySelector('.column-header h2');
+                 let columnName = newStatus;
+                 if (h2Element && h2Element.offsetParent !== null) {
+                     columnName = h2Element.textContent.trim();
+                 } else {
+                     const tabButton = document.getElementById(`tab-${newStatus}`);
+                     if (tabButton) {
+                         columnName = Array.from(tabButton.childNodes).filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent.trim()).join('') || newStatus;
+                     }
                  }
-             }
-             showAlert(`Cột "${columnName}" đã đạt giới hạn WIP (${wipLimit}). Không thể chuyển task.`); return false;
+                 showAlert(`Cột "${columnName}" đã đạt giới hạn WIP cho công việc bình thường (${wipLimit}). Không thể chuyển task.`); return false;
+            }
           }
+          
           try {
               const taskRef = doc(db, TASKS_COLLECTION, taskId);
               const taskToUpdate = allTasks.find(t => t.id === taskId);
               await updateDoc(taskRef, { status: newStatus, updatedAt: serverTimestamp(), isPinned: (newStatus === 'done' ? false : (taskToUpdate?.isPinned || false)) });
+              
               if (newStatus === 'done' && oldStatus !== 'done') {
-                  console.log("Task moved to done!");
+                  triggerConfetti(); // Call confetti
               }
               return true;
           } catch (error) { console.error("Error updating task status:", error); showAlert("Lỗi cập nhật trạng thái task: " + error.message); return false; }
@@ -810,8 +841,16 @@
               const targetColumnEl = column;
               const targetStatus = targetColumnEl.dataset.status;
               const wipLimit = parseInt(targetColumnEl.dataset.wipLimit, 10);
-              const currentCountInTarget = currentTaskCounts[targetStatus] || 0;
-              if (draggedTask.dataset.status !== targetStatus && wipLimit !== -1 && currentCountInTarget >= wipLimit) {
+              
+              let unblockedTasksInTargetColumn = 0;
+              allTasks.forEach(task => {
+                  if (task.status === targetStatus && !task.isBlocked && task.id !== draggedTask.dataset.id) { // Exclude the task being dragged
+                      unblockedTasksInTargetColumn++;
+                  }
+              });
+              const isDraggedTaskUnblocked = !allTasks.find(t => t.id === draggedTask.dataset.id)?.isBlocked;
+
+              if (draggedTask.dataset.status !== targetStatus && wipLimit !== -1 && isDraggedTaskUnblocked && unblockedTasksInTargetColumn >= wipLimit) {
                   event.dataTransfer.dropEffect = 'none';
                   tasksContainer.classList.add('border-red-400', 'bg-red-100/50');
               } else {
@@ -900,10 +939,10 @@
               const container = column.querySelector('.tasks-container');
               container.innerHTML = ''; container.classList.remove('empty', 'border-2', 'border-dashed', 'border-slate-300', 'rounded-md', 'p-4', 'mt-2.5');
           });
-          currentTaskCounts = { todo: 0, inprogress: 0, done: 0 };
+          currentTaskCounts = { todo: 0, inprogress: 0, done: 0 }; // Recalculate based on filtered tasks
           tasksToRender.forEach((taskData) => {
               if (!taskData.status || !currentTaskCounts.hasOwnProperty(taskData.status)) taskData.status = 'todo';
-              currentTaskCounts[taskData.status]++;
+              currentTaskCounts[taskData.status]++; // This now counts filtered tasks for THIS render pass
               const taskCardElement = createTaskCard(taskData);
               const columnContainer = document.getElementById(taskData.status)?.querySelector('.tasks-container');
               if (columnContainer) columnContainer.appendChild(taskCardElement);
@@ -915,14 +954,14 @@
           kanbanColumns.forEach(column => {
               const status = column.dataset.status;
               const container = column.querySelector('.tasks-container');
-              if (currentTaskCounts[status] === 0) {
+              if (currentTaskCounts[status] === 0) { // Check if this column is empty *after filtering*
                   let message;
                   const columnTitleElement = column.querySelector('.column-header h2');
                   const tabButton = document.getElementById(`tab-${status}`);
                   let columnDisplayName = status;
-                  if (columnTitleElement && columnTitleElement.offsetParent !== null) { // Check if desktop header is visible
+                  if (columnTitleElement && columnTitleElement.offsetParent !== null) {
                       columnDisplayName = columnTitleElement.textContent.trim();
-                  } else if (tabButton) { // Fallback to tab name for mobile or if header is hidden
+                  } else if (tabButton) {
                      columnDisplayName = Array.from(tabButton.childNodes).filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent.trim()).join('') || status;
                   }
                   if (hasActiveFilters) message = `Không có công việc nào khớp bộ lọc.`;
@@ -944,14 +983,13 @@
           currentActiveMobileColumnId = status;
           mobileTabButtons.forEach(btn => {
               btn.classList.remove('active-tab', 'text-sky-600', 'border-sky-600', 'text-kanban-todo-text', 'border-kanban-todo-text', 'text-kanban-inprogress-text', 'border-kanban-inprogress-text', 'text-kanban-done-text', 'border-kanban-done-text');
-              btn.classList.add('text-slate-600', 'border-transparent'); // Default inactive state
+              btn.classList.add('text-slate-600', 'border-transparent');
               if (btn.dataset.status === status) {
                 btn.classList.add('active-tab');
-                // Apply specific active colors based on status
                 if (status === 'todo') btn.classList.add('text-kanban-todo-text', 'border-kanban-todo-text');
                 else if (status === 'inprogress') btn.classList.add('text-kanban-inprogress-text', 'border-kanban-inprogress-text');
                 else if (status === 'done') btn.classList.add('text-kanban-done-text', 'border-kanban-done-text');
-                else btn.classList.add('text-sky-600', 'border-sky-600'); // Fallback active color
+                else btn.classList.add('text-sky-600', 'border-sky-600');
               }
           });
           kanbanColumns.forEach(col => {
@@ -963,18 +1001,77 @@
           button.addEventListener('click', () => { setActiveMobileColumn(button.dataset.status); });
       });
       function handleMobileLayout() {
-          if (window.innerWidth < 768) { // md breakpoint
+          if (window.innerWidth < 768) {
               kanbanMobileTabs.style.display = 'flex';
               setActiveMobileColumn(currentActiveMobileColumnId);
           } else {
               kanbanMobileTabs.style.display = 'none';
               kanbanColumns.forEach(col => {
-                  col.style.display = 'flex'; // Ensure all columns are visible on desktop
-                  col.classList.remove('active-mobile-column');
+                  col.style.display = 'flex'; col.classList.remove('active-mobile-column');
               });
           }
       }
       window.addEventListener('resize', handleMobileLayout);
+
+      // --- Confetti Logic ---
+      const confettiCanvas = document.getElementById('confetti-canvas');
+      const confettiCtx = confettiCanvas.getContext('2d');
+      let confettiAnimationId = null;
+
+      function resizeConfettiCanvas() {
+          confettiCanvas.width = window.innerWidth;
+          confettiCanvas.height = window.innerHeight;
+      }
+
+      function ConfettiParticle(x, y) {
+          this.x = x; this.y = y; this.size = Math.random() * 6 + 4; // Slightly larger
+          this.speedX = Math.random() * 4 - 2; // Slower horizontal
+          this.speedY = Math.random() * -10 - 4; // Slower initial upward
+          const colors = ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#8b5cf6', '#6366f1', '#3b82f6', '#0ea5e9', '#06b6d4', '#14b8a6', '#10b981', '#22c55e', '#84cc16', '#eab308', '#f59e0b', '#f97316']; // Tailwind v3 palette inspired
+          this.color = colors[Math.floor(Math.random() * colors.length)];
+          this.opacity = 1; this.angle = Math.random() * Math.PI * 2;
+          this.spin = Math.random() * 0.3 - 0.15; this.gravity = 0.15; // Softer gravity
+          this.drag = 0.985;
+      }
+      ConfettiParticle.prototype.update = function() {
+          this.speedY += this.gravity; this.speedX *= this.drag; this.x += this.speedX; this.y += this.speedY;
+          this.angle += this.spin; this.opacity -= 0.008; // Slower fade
+      };
+      ConfettiParticle.prototype.draw = function() {
+          confettiCtx.save(); confettiCtx.globalAlpha = this.opacity;
+          confettiCtx.translate(this.x + this.size / 2, this.y + this.size / 2);
+          confettiCtx.rotate(this.angle); confettiCtx.fillStyle = this.color;
+          confettiCtx.fillRect(-this.size /2, -this.size /2, this.size, this.size * 1.5); // Rectangles
+          confettiCtx.restore();
+      };
+      function animateConfetti() {
+          confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+          let stillAlive = false;
+          for (let i = confettiParticles.length - 1; i >= 0; i--) {
+              const p = confettiParticles[i]; p.update(); p.draw();
+              if (p.opacity > 0 && p.y < confettiCanvas.height + p.size) stillAlive = true; // Check if visible or will be
+              else confettiParticles.splice(i, 1);
+          }
+          if (stillAlive) confettiAnimationId = requestAnimationFrame(animateConfetti);
+          else {
+              confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+              cancelAnimationFrame(confettiAnimationId); confettiAnimationId = null;
+          }
+      }
+      function triggerConfetti() {
+          if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId); // Clear previous animation
+          confettiParticles.length = 0; // Clear old particles
+          const particleCount = 100; // Number of particles
+          const centerX = confettiCanvas.width / 2;
+          const centerY = confettiCanvas.height / 3; // Start higher
+          for (let i = 0; i < particleCount; i++) {
+              confettiParticles.push(new ConfettiParticle(centerX, centerY));
+          }
+          animateConfetti();
+      }
+      window.addEventListener('resize', resizeConfettiCanvas);
+      resizeConfettiCanvas(); // Initial size
+
 
       const q = query(collection(db, TASKS_COLLECTION));
       onSnapshot(q, (querySnapshot) => {
@@ -991,7 +1088,7 @@
           console.error("Error fetching tasks with onSnapshot: ", error);
           showAlert("Lỗi tải danh sách công việc: " + error.message);
       });
-      handleMobileLayout(); // Initial layout check
+      handleMobileLayout();
     </script>
 </body>
 </html>
