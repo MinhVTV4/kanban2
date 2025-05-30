@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Tailwind CSS - Chức Năng Lưu Trữ)</title>
+    <title>Bảng Kanban Task (Tailwind CSS - Lưu Trữ Cải Tiến)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -360,7 +360,7 @@
       const iconEditPencil = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>`;
       const iconArchiveBoxArrowDown = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M12 18.75v-7.5m0 0L9.75 13.5M12 11.25l2.25 2.25" /></svg>`;
       const iconUnarchive = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 inline mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" /></svg>`;
-      const iconDelete = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 inline mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12.56 0c.342.052.682.107 1.022.166m0 0L9.26 9m0 0l-.346 9m3.478-9.595c-.342-.052-.682-.107-1.022-.166m0 0c-.342.052-.682-.107-1.022-.166m6.638 0c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12.56 0c.342.052.682.107 1.022.166m-1.022-.165L9.26 9" /></svg>`;
+      // const iconDelete = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 inline mr-1"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12.56 0c.342.052.682.107 1.022.166m0 0L9.26 9m0 0l-.346 9m3.478-9.595c-.342-.052-.682-.107-1.022-.166m0 0c-.342.052-.682-.107-1.022-.166m6.638 0c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12.56 0c.342.052.682.107 1.022.166m-1.022-.165L9.26 9" /></svg>`;
       const iconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>`;
       const iconArrowRight = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>`;
       const iconCheck = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`;
@@ -508,13 +508,6 @@
                   unarchiveBtn.title = "Khôi phục công việc";
                   unarchiveBtn.onclick = () => unarchiveTask(task.id, task.originalStatus || 'todo');
                   actionsDiv.appendChild(unarchiveBtn);
-
-                  const deleteBtn = document.createElement('button');
-                  deleteBtn.className = 'bg-red-500 hover:bg-red-600 text-white text-xs font-medium py-1 px-2.5 rounded flex items-center';
-                  deleteBtn.innerHTML = iconDelete + 'Xóa hẳn';
-                  deleteBtn.title = "Xóa vĩnh viễn";
-                  deleteBtn.onclick = () => deleteArchivedTaskPermanently(task.id);
-                  actionsDiv.appendChild(deleteBtn);
                   
                   item.appendChild(actionsDiv);
                   archivedTasksList.appendChild(item);
@@ -631,6 +624,7 @@
       }
 
       async function addTaskToFirestore(title, description, status, priority, dueDate, assignee, tagsString) {
+        console.log("addTaskToFirestore called with:", {title, description, status, priority, dueDate, assignee, tagsString});
         if (!title.trim()) { showAlert("Tiêu đề không được để trống!"); return; }
         const columnElement = document.getElementById(status);
         if (!columnElement) { showAlert(`Lỗi: Không tìm thấy cột cho trạng thái "${status}".`); return; }
@@ -660,7 +654,7 @@
             await addDoc(collection(db, TASKS_COLLECTION), {
                 title, description, status, priority, dueDate, assignee,
                 tags: tagsArray, isBlocked: false, blockReason: "", createdAt: serverTimestamp(), 
-                isPinned: false, order: Date.now(), isArchived: false // Initialize isArchived
+                isPinned: false, order: Date.now(), isArchived: false 
             });
             showAlert("Thêm công việc mới thành công!"); closeAddTaskModal();
         } catch (e) { console.error("Error adding task: ", e); showAlert("Lỗi thêm task: " + e.message); }
@@ -703,18 +697,11 @@
 
       async function deleteArchivedTaskPermanently(taskId) {
           if (!taskId) return;
-          if (!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn công việc này không? Hành động này không thể hoàn tác.")) {
-              return;
-          }
-          try {
-              await deleteDoc(doc(db, TASKS_COLLECTION, taskId));
-              showAlert("Đã xóa vĩnh viễn công việc.");
-              allTasks = allTasks.filter(t => t.id !== taskId); // Optimistic update for modal
-              openArchivedTasksModal(); // Refresh modal list
-          } catch (error) {
-              console.error("Error deleting task permanently:", error);
-              showAlert("Lỗi khi xóa công việc vĩnh viễn: " + error.message);
-          }
+          // Re-implement confirm for this critical action if needed, or remove direct permanent delete
+          // For now, let's assume a direct delete from archive is not available as per previous request.
+          // If it IS needed, a confirm dialog is crucial.
+          // This function might be redundant now if we removed the button.
+          console.warn("Permanent delete from archive not implemented based on last request.");
       }
 
 
@@ -737,7 +724,7 @@
           const titleText = document.createElement('p');
           titleText.className = 'task-card-title-text text-sm font-semibold text-slate-800 flex-grow cursor-pointer line-clamp-2 leading-tight';
           titleText.textContent = taskData.title;
-          titleText.onclick = () => openBottomSheet(taskData);
+          titleText.onclick = () => openBottomSheet(taskData); 
           cardHeader.appendChild(titleText);
 
           const cardActions = document.createElement('div');
@@ -757,12 +744,16 @@
           editButton.onclick = (e) => { e.stopPropagation(); openEditModal(taskData); }; 
           cardActions.appendChild(editButton);
           
-          const archiveButton = document.createElement('button');
-          archiveButton.className = 'p-1 rounded text-slate-400 hover:bg-slate-200 hover:text-red-500';
-          archiveButton.innerHTML = iconArchiveBoxArrowDown;
-          archiveButton.title = "Lưu trữ công việc";
-          archiveButton.onclick = (e) => { e.stopPropagation(); archiveTask(taskData.id, taskData.status); }; 
-          cardActions.appendChild(archiveButton);
+          // Archive button only for 'done' tasks
+          if (taskData.status === 'done') {
+              const archiveButton = document.createElement('button');
+              archiveButton.className = 'p-1 rounded text-slate-400 hover:bg-slate-200 hover:text-purple-600';
+              archiveButton.innerHTML = iconArchiveBoxArrowDown;
+              archiveButton.title = "Lưu trữ công việc";
+              archiveButton.onclick = (e) => { e.stopPropagation(); archiveTask(taskData.id, taskData.status); }; 
+              cardActions.appendChild(archiveButton);
+          }
+
 
           cardHeader.appendChild(cardActions);
           taskCard.appendChild(cardHeader);
@@ -915,17 +906,14 @@
               return true;
           } catch (error) { console.error("Error updating task status:", error); showAlert("Lỗi cập nhật trạng thái task: " + error.message); return false; }
       }
-      async function deleteTask(taskId) { // This is the old delete, should be for active tasks if kept, or removed if archive is the primary delete flow.
-          // For now, let's assume this is a soft delete (archive) or user should use "Delete Permanently" from archive.
-          // If we want a direct "Delete" button on active tasks that bypasses archive, its logic needs to be distinct.
-          // Let's make it archive for now to simplify.
-          const taskData = allTasks.find(t => t.id === taskId);
-          if (taskData) {
-            archiveTask(taskId, taskData.status);
-            showAlert("Công việc đã được chuyển vào lưu trữ. Bạn có thể xóa vĩnh viễn từ mục Xem Lưu Trữ.");
-          } else {
-            showAlert("Không tìm thấy công việc để xóa/lưu trữ.");
-          }
+      async function deleteTask(taskId) { // This function is currently not directly called by a delete button on the card
+          // It's kept for potential future use or if archiveTask decides to permanently delete in some cases.
+          // For now, permanent deletion is handled in deleteArchivedTaskPermanently
+          console.warn("deleteTask function was called, but primary deletion is via archive and then permanent delete from archive list.");
+          // If you want this to be a direct delete:
+          // if (!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn công việc này không?")) return;
+          // try { await deleteDoc(doc(db, TASKS_COLLECTION, taskId)); showAlert("Xóa công việc thành công!"); }
+          // catch (error) { console.error("Error deleting task:", error); showAlert("Lỗi xóa task: " + error.message); }
       }
 
       function handleDragStart(event) {
@@ -1067,7 +1055,7 @@
           const selectedBlocked = filterBlockedSelect.value; const selectedDueDate = filterDueDateSelect.value;
           
           const filteredTasks = allTasks.filter(task => {
-              if (task.isArchived) return false; // Exclude archived tasks from main board
+              if (task.isArchived) return false; 
               if (searchTerm && !task.title.toLowerCase().includes(searchTerm)) return false;
               if (selectedPriority && task.priority !== selectedPriority) return false;
               if (selectedAssignee && task.assignee !== selectedAssignee) return false;
@@ -1100,7 +1088,7 @@
               container.innerHTML = ''; container.classList.remove('empty', 'border-2', 'border-dashed', 'border-slate-300', 'rounded-md', 'p-4', 'mt-2.5');
           });
           currentTaskCounts = { todo: 0, inprogress: 0, done: 0 }; 
-          tasksToRender.forEach((taskData) => { // tasksToRender are already filtered for non-archived
+          tasksToRender.forEach((taskData) => { 
               if (!taskData.status || !currentTaskCounts.hasOwnProperty(taskData.status)) taskData.status = 'todo';
               currentTaskCounts[taskData.status]++; 
               const taskCardElement = createTaskCard(taskData);
