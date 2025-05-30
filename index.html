@@ -119,7 +119,7 @@
         }
         .kanban-column {
             flex: 1; min-width: 320px;
-            border-radius: 8px; padding: 15px; /* Reduced padding for column */
+            border-radius: 8px; padding: 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column;
             transition: background-color 0.3s ease, border 0.3s ease;
         }
@@ -132,7 +132,7 @@
             margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.1);
         }
         .kanban-column .column-header .title-group {
-            display: flex; align-items: center; font-size: 1.15rem; /* Slightly reduced */
+            display: flex; align-items: center; font-size: 1.15rem;
             font-weight: 600;
         }
         .kanban-column .column-header .column-icon { width: 18px; height: 18px; margin-right: 8px; }
@@ -149,10 +149,8 @@
         .kanban-column#done .task-count-badge { background-color: #52c41a; }
 
         .tasks-container {
-            padding: 0; min-height: 200px; /* Reduced min-height */
+            padding: 0; min-height: 200px;
             flex-grow: 1;
-            /* For scrollbar styling if needed in future */
-            /* overflow-y: auto; height: calc(100vh - 280px); */
         }
         .tasks-container.empty {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -164,24 +162,25 @@
         /* Task Card Styling */
         .task-card {
             background-color: #ffffff; border: 1px solid #e0e0e0;
-            border-left-width: 4px; /* Keep left border for priority */
-            /* border-left-color: transparent; Will be set by priority class */
+            border-left-width: 4px;
             border-radius: 6px; padding: 12px 15px; margin-bottom: 10px; cursor: grab;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: all 0.2s ease; position: relative;
             display: flex; flex-direction: column;
         }
         .task-card.task-pinned {
-            background-color: #fef9c3; /* Light yellow for pinned */
-            border: 1px solid #facc15; /* Yellow border for pinned */
+            background-color: #fef9c3;
+            border: 1px solid #facc15;
+            /* Ensure left border for priority is still visible or overridden if needed */
+            border-left-width: 4px !important; /* Make sure pinned border doesn't hide priority */
         }
 
         .task-card-header {
             display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;
         }
-        .task-card-title-text { /* Renamed from task-card h4 */
+        .task-card-title-text {
             font-size: 0.95rem; color: #1f2937; font-weight: 600;
             margin: 0; flex-grow: 1; word-break: break-word;
-            cursor: pointer; /* Make title clickable to open edit modal */
+            cursor: pointer;
         }
         .task-card-actions { display: flex; align-items: center; gap: 4px; margin-left: 8px; flex-shrink: 0;}
         .task-card-actions button {
@@ -193,20 +192,25 @@
         .task-card-actions button svg { width: 16px; height: 16px; }
         .task-card-actions .pin-btn.pinned svg { color: #f59e0b; }
 
-
-        .task-card-attachment-preview {
-            max-width: 100%; max-height: 100px; object-fit: cover;
-            border-radius: 4px; margin-top: 8px; border: 1px solid #e5e7eb; display: none; /* Hidden by default */
+        .task-card-description { /* New class for description if separate from title */
+            font-size: 0.85rem; color: #4b5563; margin-top: 4px; margin-bottom: 8px;
+            white-space: pre-wrap;
         }
-        /* Placeholder for attachment link if not an image */
-        .task-card-attachment-link { display: none; /* Hidden by default */ }
-
 
         .task-card-details {
-            display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+            display: flex; flex-wrap: wrap; gap: 4px 10px; /* row-gap column-gap */
+            align-items: center;
             font-size: 0.75rem; color: #6b7280; margin-top: 8px;
         }
-        .task-due-date-display {} /* Container for due date text */
+        .task-detail-item { /* Wrapper for each detail like assignee, due date */
+            display: flex;
+            align-items: center;
+        }
+        .task-detail-item strong {
+            color: #4b5563; /* Slightly darker label */
+            margin-right: 4px;
+        }
+        .task-due-date-display {}
         .task-due-date-display.due-overdue { color: #ef4444; font-weight: 500; }
         .task-due-date-display.due-soon { color: #f59e0b; font-weight: 500; }
 
@@ -214,9 +218,17 @@
             padding: 2px 6px; border-radius: 4px; font-weight: 500; font-size: 0.7rem;
             color: white;
         }
-        .priority-indicator-label.prio-low { background-color: #22c55e; } /* Green */
-        .priority-indicator-label.prio-medium { background-color: #f59e0b; } /* Amber */
-        .priority-indicator-label.prio-high { background-color: #ef4444; } /* Red */
+        .priority-indicator-label.prio-low { background-color: #22c55e; }
+        .priority-indicator-label.prio-medium { background-color: #f59e0b; }
+        .priority-indicator-label.prio-high { background-color: #ef4444; }
+
+        .task-tags-container { /* Renamed from .task-tags for clarity */
+             margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px;
+        }
+        .task-tag {
+            background-color: #e0e7ff; color: #4338ca; padding: 2px 8px; /* Indigo theme */
+            border-radius: 4px; font-size: 0.7rem; font-weight: 500;
+        }
 
 
         .task-card-footer {
@@ -230,19 +242,24 @@
         }
         .task-move-actions button svg { width: 14px; height: 14px; }
         .task-move-actions button:hover { background-color: #e5e7eb; }
-        .move-btn-todo { color: #ef4444; border-color: #fca5a5; } /* Red */
-        .move-btn-inprogress { color: #f59e0b; border-color: #fcd34d; } /* Amber */
-        .move-btn-done { color: #22c55e; border-color: #86efac; } /* Green */
+        .move-btn-todo { color: #ef4444; border-color: #fca5a5; }
+        .move-btn-inprogress { color: #f59e0b; border-color: #fcd34d; }
+        .move-btn-done { color: #22c55e; border-color: #86efac; }
 
         .task-timestamp { font-size: 0.7rem; color: #9ca3af; }
 
-        /* Priority border colors for task card */
         .task-card.priority-low { border-left-color: #22c55e; }
         .task-card.priority-medium { border-left-color: #f59e0b; }
         .task-card.priority-high { border-left-color: #ef4444; }
 
         .task-card.blocked { background-color: #fee2e2; border-left-color: #b91c1c !important; border-color: #fecaca; }
-        /* Blocked icon and text styling remains same */
+        .blocked-icon-wrapper { display: flex; align-items: center; margin-top: 8px; }
+        .blocked-icon {
+            color: #a8071a; font-weight: bold; cursor: help; font-size: 0.8em; margin-right: 6px;
+            padding: 3px 6px; background-color: #ffccc7; border-radius: 4px; display: inline-flex; align-items: center;
+        }
+        .blocked-icon svg { width: 1em; height: 1em; margin-right: 4px; }
+        .block-reason-text { font-size: 0.8em; color: #8c8c8c; font-style: italic; }
 
 
         .dragging { opacity: 0.4; border: 2px dashed #1890ff; }
@@ -309,11 +326,11 @@
             .kanban-board { display: block; }
             .kanban-column {
                 width: 100%; margin-bottom: 0; display: none;
-                background-color: #fff; padding: 10px; /* Reduced padding for mobile column content */
+                background-color: #fff; padding: 10px;
             }
             .kanban-column.active-mobile-column { display: flex; }
             .kanban-column .column-header { display: none; }
-            .tasks-container.empty { background-color: transparent; border-width: 1px; } /* Thinner border for mobile empty */
+            .tasks-container.empty { background-color: transparent; border-width: 1px; }
             .fab-add-task { bottom: 20px; right: 20px; width: 56px; height: 56px; font-size: 24px; line-height: 56px; }
             .actions-bar-container { justify-content: space-between; }
         }
@@ -507,7 +524,7 @@
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
 
-      // === DOM Elements (General & Header) ===
+      // DOM Elements
       const kanbanColumns = document.querySelectorAll('.kanban-column');
       const customAlertOverlay = document.getElementById('custom-alert-overlay');
       const customAlertMessage = document.getElementById('custom-alert-message');
@@ -524,13 +541,9 @@
       const filterDueDateSelect = document.getElementById('filter-due-date');
       const applyFiltersBtn = document.getElementById('apply-filters-btn');
       const clearFiltersBtn = document.getElementById('clear-filters-btn');
-
-      // === DOM Elements (Mobile Tabs) ===
       const kanbanMobileTabs = document.getElementById('kanban-mobile-tabs');
       const mobileTabButtons = document.querySelectorAll('.mobile-tab-button');
       let currentActiveMobileColumnId = 'todo';
-
-      // === DOM Elements (Add Task FAB & Modal) ===
       const fabAddTaskBtn = document.getElementById('fab-add-task');
       const addTaskModal = document.getElementById('add-task-modal');
       const closeAddTaskModalBtn = document.getElementById('close-add-task-modal-btn');
@@ -543,8 +556,6 @@
       const addModalTaskDueDateInput = document.getElementById('add-modal-task-due-date');
       const addModalTaskAssigneeInput = document.getElementById('add-modal-task-assignee');
       const addModalTaskTagsInput = document.getElementById('add-modal-task-tags');
-
-      // === DOM Elements (Edit Task Modal) ===
       const editTaskModal = document.getElementById('edit-task-modal');
       const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
       const cancelEditTaskBtn = document.getElementById('cancel-edit-task-btn');
@@ -560,21 +571,18 @@
       const editTaskBlockedCheckbox = document.getElementById('edit-task-blocked');
       const editBlockReasonContainer = document.getElementById('edit-block-reason-container');
       const editTaskBlockReasonInput = document.getElementById('edit-task-block-reason');
-
-      // === DOM Elements (Archived Tasks Modal) ===
       const archivedTasksModal = document.getElementById('archived-tasks-modal');
       const closeArchivedModalBtn = document.getElementById('close-archived-modal-btn');
       const archivedTasksList = document.getElementById('archived-tasks-list');
 
-
       let draggedTask = null;
       let currentEditingTaskId = null;
-      const TASKS_COLLECTION = 'tasks_kanban_public_v13_detailed_card'; // Updated collection name
+      const TASKS_COLLECTION = 'tasks_kanban_public_v13_detailed_card';
       const priorityMap = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
       let currentTaskCounts = { todo: 0, inprogress: 0, done: 0 };
       let allTasks = [];
 
-      // --- SVG Icons ---
+      // SVG Icons
       const iconPinOutline = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25L7.5 16.5V3.75m9 0H7.5A2.25 2.25 0 005.25 6v10.5A2.25 2.25 0 007.5 18.75h9A2.25 2.25 0 0018.75 16.5V6A2.25 2.25 0 0016.5 3.75z" /></svg>`;
       const iconPinSolid = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0111.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 01-1.085.67L12 18.089l-7.165 3.583A.75.75 0 013.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93z" clip-rule="evenodd" /></svg>`;
       const iconMoreVertical = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" /></svg>`;
@@ -582,12 +590,9 @@
       const iconArrowRight = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>`;
       const iconCheck = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>`;
 
-
-      // === Custom Alert Function ===
       function showAlert(message) { customAlertMessage.textContent = message; customAlertOverlay.style.display = 'flex'; }
       customAlertOkBtn.addEventListener('click', () => { customAlertOverlay.style.display = 'none'; });
 
-      // === Helper Functions ===
       function formatDateForDisplay(dateString) {
           if (!dateString) return 'N/A';
           const date = new Date(dateString);
@@ -603,10 +608,9 @@
         return `${year}-${month}-${day}`;
       }
 
-      // === Add Task Modal Logic ===
       function openAddTaskModal() {
         addModalTaskTitleInput.value = ''; addModalTaskDescInput.value = '';
-        addModalTaskStatusInput.value = currentActiveMobileColumnId || 'todo'; // Default to current mobile tab or 'todo'
+        addModalTaskStatusInput.value = currentActiveMobileColumnId || 'todo';
         addModalTaskPriorityInput.value = 'medium';
         addModalTaskDueDateInput.value = ''; addModalTaskAssigneeInput.value = ''; addModalTaskTagsInput.value = '';
         addTaskModal.style.display = 'flex';
@@ -623,7 +627,6 @@
           addTaskToFirestore(title, description, status, priority, dueDate, assignee, tags);
       });
 
-      // === Edit Task Modal Logic ===
       editTaskBlockedCheckbox.addEventListener('change', function() {
           editBlockReasonContainer.style.display = this.checked ? 'block' : 'none';
           if (!this.checked) editTaskBlockReasonInput.value = '';
@@ -667,7 +670,6 @@
           } catch (error) { console.error("Error updating task:", error); showAlert("Lỗi cập nhật task: " + error.message); }
       });
 
-      // === Archived Tasks Modal Logic ===
       function openArchivedTasksModal() {
           archivedTasksList.innerHTML = '<p>Chức năng xem công việc đã lưu trữ sẽ được phát triển ở các phiên bản sau.</p>';
           archivedTasksModal.style.display = 'flex';
@@ -676,7 +678,6 @@
       viewArchivedBtn.addEventListener('click', openArchivedTasksModal);
       closeArchivedModalBtn.addEventListener('click', closeArchivedTasksModal);
 
-      // === Window OnClick for Modals ===
       window.onclick = function(event) {
           if (event.target == editTaskModal) closeEditModal();
           if (event.target == addTaskModal) closeAddTaskModal();
@@ -684,7 +685,6 @@
           if (event.target == customAlertOverlay) customAlertOverlay.style.display = 'none';
       };
 
-      // === Kanban App Logic ===
       function updateColumnUI() {
           kanbanColumns.forEach(column => {
               const status = column.dataset.status;
@@ -721,7 +721,7 @@
         try {
             await addDoc(collection(db, TASKS_COLLECTION), {
                 title, description, status, priority, dueDate, assignee,
-                tags: tagsArray, isBlocked: false, blockReason: "", createdAt: serverTimestamp(), isPinned: false // Add isPinned default
+                tags: tagsArray, isBlocked: false, blockReason: "", createdAt: serverTimestamp(), isPinned: false
             });
             showAlert("Thêm công việc mới thành công!"); closeAddTaskModal();
         } catch (e) { console.error("Error adding task: ", e); showAlert("Lỗi thêm task: " + e.message); }
@@ -736,30 +736,22 @@
           taskCard.dataset.priority = taskData.priority || 'medium';
           taskCard.dataset.isPinned = taskData.isPinned ? 'true' : 'false';
 
-          // Apply priority classes (for left border)
           taskCard.classList.remove('priority-high', 'priority-medium', 'priority-low');
           taskCard.classList.add(`priority-${taskData.priority || 'medium'}`);
 
-          if (taskData.isPinned) {
-              taskCard.classList.add('task-pinned');
-          }
-          if (taskData.isBlocked) { // Ensure blocked styling is applied
-              taskCard.classList.add('blocked');
-          }
+          if (taskData.isPinned) taskCard.classList.add('task-pinned');
+          if (taskData.isBlocked) taskCard.classList.add('blocked');
 
-          // --- Card Header ---
+          // Card Header
           const cardHeader = document.createElement('div');
           cardHeader.classList.add('task-card-header');
-
-          const titleText = document.createElement('p'); // Changed from h4 to p for consistency with example
+          const titleText = document.createElement('p');
           titleText.classList.add('task-card-title-text');
           titleText.textContent = taskData.title;
-          titleText.onclick = () => openEditModal(taskData); // Open edit modal on title click
+          titleText.onclick = () => openEditModal(taskData);
           cardHeader.appendChild(titleText);
-
           const cardActions = document.createElement('div');
           cardActions.classList.add('task-card-actions');
-
           const pinButton = document.createElement('button');
           pinButton.classList.add('pin-btn');
           pinButton.innerHTML = taskData.isPinned ? iconPinSolid : iconPinOutline;
@@ -767,63 +759,57 @@
           if(taskData.isPinned) pinButton.classList.add('pinned');
           pinButton.onclick = (e) => { e.stopPropagation(); togglePinTask(taskData); };
           cardActions.appendChild(pinButton);
-
           const moreButton = document.createElement('button');
           moreButton.innerHTML = iconMoreVertical;
           moreButton.title = "Thêm hành động";
-          moreButton.onclick = (e) => {
-              e.stopPropagation();
-              // Placeholder for more actions (e.g., open bottom sheet on mobile)
-              showAlert(`Thêm hành động cho: ${taskData.title}`);
-          };
+          moreButton.onclick = (e) => { e.stopPropagation(); showAlert(`Thêm hành động cho: ${taskData.title}`); };
           cardActions.appendChild(moreButton);
           cardHeader.appendChild(cardActions);
           taskCard.appendChild(cardHeader);
 
-          // --- Attachment Preview (Placeholder) ---
-          // const attachmentPreview = document.createElement('img');
-          // attachmentPreview.classList.add('task-card-attachment-preview');
-          // attachmentPreview.src = "#"; // Placeholder
-          // if (taskData.attachmentURL && taskData.attachmentType && taskData.attachmentType.startsWith('image/')) {
-          //     attachmentPreview.src = taskData.attachmentURL;
-          //     attachmentPreview.style.display = 'block';
-          // }
-          // taskCard.appendChild(attachmentPreview);
-
-          // --- Task Description (if different from title, or if title is just a summary) ---
-          if (taskData.description && taskData.description !== taskData.title) {
+          // Description (if provided and different from title)
+          if (taskData.description && taskData.description.trim() !== '' && taskData.description !== taskData.title) {
             const descElement = document.createElement('p');
-            descElement.classList.add('task-description'); // Use existing class if suitable
+            descElement.classList.add('task-card-description');
             descElement.textContent = taskData.description;
-            descElement.style.fontSize = '0.85rem'; // Smaller than title
-            descElement.style.color = '#4b5563';   // Gray color
-            descElement.style.marginTop = '4px';
-            descElement.style.marginBottom = '8px';
             taskCard.appendChild(descElement);
           }
 
-
-          // --- Card Details (Due Date, Priority Label) ---
+          // Card Details (Assignee, Due Date, Priority Label)
           const cardDetails = document.createElement('div');
           cardDetails.classList.add('task-card-details');
 
+          if (taskData.assignee) {
+              const assigneeDiv = document.createElement('div');
+              assigneeDiv.classList.add('task-detail-item');
+              assigneeDiv.innerHTML = `<strong>Người làm:</strong> ${taskData.assignee}`;
+              cardDetails.appendChild(assigneeDiv);
+          }
+
           if (taskData.dueDate) {
-              const dueDateDisplay = document.createElement('span');
-              dueDateDisplay.classList.add('task-due-date-display');
-              dueDateDisplay.textContent = `Hạn: ${formatDateForDisplay(taskData.dueDate)}`;
+              const dueDateDiv = document.createElement('div');
+              dueDateDiv.classList.add('task-detail-item');
+              const dueDateSpan = document.createElement('span');
+              dueDateSpan.classList.add('task-due-date-display');
+              dueDateSpan.textContent = formatDateForDisplay(taskData.dueDate);
               const today = getTodayDateString();
               if (taskData.dueDate < today) {
-                  dueDateDisplay.classList.add('due-overdue');
-                  dueDateDisplay.textContent += " (Quá hạn)";
+                  dueDateSpan.classList.add('due-overdue');
+                  dueDateSpan.textContent += " (Quá hạn)";
               } else {
                   const todayDate = new Date(today); const dueDateObj = new Date(taskData.dueDate);
                   const diffTime = dueDateObj - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  if (diffDays <= 1 && diffDays >=0) {
-                      dueDateDisplay.classList.add('due-soon');
-                      dueDateDisplay.textContent += " (Hôm nay/mai)";
+                  if (diffDays === 0) { // Due today
+                     dueDateSpan.classList.add('due-soon');
+                     dueDateSpan.textContent += " (Hôm nay)";
+                  } else if (diffDays === 1) { // Due tomorrow
+                     dueDateSpan.classList.add('due-soon');
+                     dueDateSpan.textContent += " (Ngày mai)";
                   }
               }
-              cardDetails.appendChild(dueDateDisplay);
+              dueDateDiv.innerHTML = `<strong>Hạn:</strong> `;
+              dueDateDiv.appendChild(dueDateSpan);
+              cardDetails.appendChild(dueDateDiv);
           }
 
           const priorityIndicator = document.createElement('span');
@@ -836,7 +822,21 @@
               taskCard.appendChild(cardDetails);
           }
 
-          // Blocked Info (if applicable)
+          // Tags
+          if (taskData.tags && taskData.tags.length > 0) {
+              const tagsContainer = document.createElement('div');
+              tagsContainer.classList.add('task-tags-container');
+              taskData.tags.forEach(tagText => {
+                  const tagSpan = document.createElement('span');
+                  tagSpan.classList.add('task-tag');
+                  tagSpan.textContent = tagText;
+                  tagsContainer.appendChild(tagSpan);
+              });
+              taskCard.appendChild(tagsContainer);
+          }
+
+
+          // Blocked Info
           if (taskData.isBlocked) {
               const blockedInfoWrapper = document.createElement('div'); blockedInfoWrapper.classList.add('blocked-icon-wrapper');
               const blockedSpan = document.createElement('span'); blockedSpan.classList.add('blocked-icon');
@@ -850,14 +850,11 @@
               taskCard.appendChild(blockedInfoWrapper);
           }
 
-
-          // --- Card Footer (Move actions, Timestamp) ---
+          // Card Footer
           const cardFooter = document.createElement('div');
           cardFooter.classList.add('task-card-footer');
-
           const moveActions = document.createElement('div');
           moveActions.classList.add('task-move-actions');
-
           if (taskData.status !== 'todo') {
               const moveToTodoBtn = document.createElement('button');
               moveToTodoBtn.innerHTML = iconArrowLeft; moveToTodoBtn.title = "Chuyển sang Cần làm";
@@ -881,7 +878,6 @@
               moveActions.appendChild(moveToDoneBtn);
           }
           cardFooter.appendChild(moveActions);
-
           const timestamp = document.createElement('span');
           timestamp.classList.add('task-timestamp');
           timestamp.textContent = taskData.createdAt && taskData.createdAt.toDate ?
@@ -889,15 +885,6 @@
             : 'N/A';
           cardFooter.appendChild(timestamp);
           taskCard.appendChild(cardFooter);
-
-          // Delete button (kept from previous design, can be moved into "More Actions" later)
-          const deleteBtn = document.createElement('button');
-          deleteBtn.classList.add('delete-btn'); // This class might need to be styled or removed if not used
-          deleteBtn.innerHTML = '&times;'; deleteBtn.title = "Xóa";
-          deleteBtn.style.position = 'absolute'; deleteBtn.style.top = '5px'; deleteBtn.style.right = '5px';
-          deleteBtn.style.fontSize = '1.2rem'; deleteBtn.style.padding = '0 5px';
-          deleteBtn.onclick = (event) => { event.stopPropagation(); if (confirm(`Bạn có chắc chắn muốn xóa công việc "${taskData.title}" không?`)) deleteTask(taskData.id); };
-          // taskCard.appendChild(deleteBtn); // Decide if this delete button is still needed here or in "More Actions"
 
           taskCard.addEventListener('dragstart', handleDragStart);
           taskCard.addEventListener('dragend', handleDragEnd);
@@ -909,7 +896,6 @@
         try {
             const taskRef = doc(db, TASKS_COLLECTION, taskData.id);
             await updateDoc(taskRef, { isPinned: newPinnedState });
-            // Firestore onSnapshot will handle re-rendering
         } catch (error) {
             console.error("Error toggling pin state:", error);
             showAlert("Lỗi khi ghim/bỏ ghim công việc.");
@@ -935,9 +921,9 @@
           }
           try {
               const taskRef = doc(db, TASKS_COLLECTION, taskId);
-              await updateDoc(taskRef, { status: newStatus, updatedAt: serverTimestamp(), isPinned: (newStatus === 'done' ? false : (allTasks.find(t=>t.id === taskId)?.isPinned || false)) }); // Unpin if moved to done
+              const taskToUpdate = allTasks.find(t => t.id === taskId);
+              await updateDoc(taskRef, { status: newStatus, updatedAt: serverTimestamp(), isPinned: (newStatus === 'done' ? false : (taskToUpdate?.isPinned || false)) });
               if (newStatus === 'done' && oldStatus !== 'done') {
-                  // Placeholder for confetti or other "done" action
                   console.log("Task moved to done!");
               }
               return true;
@@ -948,9 +934,8 @@
           catch (error) { console.error("Error deleting task:", error); showAlert("Lỗi xóa task: " + error.message); }
       }
 
-      // --- Drag and Drop Handlers ---
       function handleDragStart(event) {
-          draggedTask = event.target.closest('.task-card'); // Ensure we get the task card
+          draggedTask = event.target.closest('.task-card');
           if (!draggedTask) return;
           event.dataTransfer.setData('text/plain', draggedTask.dataset.id);
           setTimeout(() => { if(draggedTask) draggedTask.classList.add('dragging'); }, 0);
@@ -959,7 +944,7 @@
           if (draggedTask) draggedTask.classList.remove('dragging'); draggedTask = null;
           kanbanColumns.forEach(col => {
             const tasksContainer = col.querySelector('.tasks-container');
-            if(tasksContainer) tasksContainer.classList.remove('drag-over-column'); // Use on tasks-container
+            if(tasksContainer) tasksContainer.classList.remove('drag-over-column', 'wip-limit-exceeded');
           });
       }
       kanbanColumns.forEach(column => {
@@ -967,12 +952,11 @@
           tasksContainer.addEventListener('dragover', (event) => {
               event.preventDefault();
               if (!draggedTask) return;
-              tasksContainer.classList.add('drag-over-column'); // Apply to tasks-container
-              const targetColumnEl = column; // The column itself
+              tasksContainer.classList.add('drag-over-column');
+              const targetColumnEl = column;
               const targetStatus = targetColumnEl.dataset.status;
               const wipLimit = parseInt(targetColumnEl.dataset.wipLimit, 10);
               const currentCountInTarget = currentTaskCounts[targetStatus] || 0;
-
               if (draggedTask.dataset.status !== targetStatus && wipLimit !== -1 && currentCountInTarget >= wipLimit) {
                   event.dataTransfer.dropEffect = 'none';
                   tasksContainer.classList.add('wip-limit-exceeded');
@@ -994,15 +978,10 @@
               const newStatus = targetColumnEl.dataset.status;
               if (oldStatus !== newStatus) {
                   await updateTaskStatusInFirestore(taskId, newStatus, oldStatus);
-              } else { // Reordering within the same column
-                  // Advanced reordering logic would go here if needed,
-                  // for now, onSnapshot handles the order based on 'isPinned' and 'createdAt'
               }
           });
       });
 
-
-      // === Filtering Logic ===
       toggleFilterBarBtn.addEventListener('click', () => {
           filterBar.classList.toggle('filter-bar-visible');
           const buttonTextSpan = toggleFilterBarBtn.querySelector('#toggle-filter-text');
@@ -1105,7 +1084,6 @@
           applyAllFilters();
       });
 
-      // === Mobile Tab Logic ===
       function setActiveMobileColumn(status) {
           currentActiveMobileColumnId = status;
           mobileTabButtons.forEach(btn => {
@@ -1133,19 +1111,14 @@
       }
       window.addEventListener('resize', handleMobileLayout);
 
-      // === Firestore Real-time Listener ===
       const q = query(collection(db, TASKS_COLLECTION));
       onSnapshot(q, (querySnapshot) => {
           allTasks = [];
           querySnapshot.forEach((docSnap) => { allTasks.push({ ...docSnap.data(), id: docSnap.id }); });
-          allTasks.sort((a, b) => { // Sort by pinned first, then by creation date
-            if (a.isPinned && !b.isPinned) return -1;
-            if (!a.isPinned && b.isPinned) return 1;
-            // If both are pinned or both are not pinned, sort by createdAt
+          allTasks.sort((a, b) => {
+            if (a.isPinned && !b.isPinned) return -1; if (!a.isPinned && b.isPinned) return 1;
             if (a.createdAt && b.createdAt) return b.createdAt.toMillis() - a.createdAt.toMillis();
-            else if (a.createdAt) return -1;
-            else if (b.createdAt) return 1;
-            return 0;
+            else if (a.createdAt) return -1; else if (b.createdAt) return 1; return 0;
           });
           populateFilterOptions(); applyAllFilters();
       }, (error) => {
