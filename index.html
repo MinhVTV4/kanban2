@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Tailwind CSS - Cập Nhật Giao Diện Cột)</title>
+    <title>Bảng Kanban Task (Tailwind CSS - Viền Thẻ Tinh Chỉnh)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -81,12 +81,11 @@
               sans: ['Inter', 'sans-serif'],
             },
             colors: {
-              // Darker shades for column backgrounds
-              'kanban-todo': '#ffe4e6', // Darker Light Pink
+              'kanban-todo': '#ffe4e6', 
               'kanban-todo-text': '#c91368',
-              'kanban-inprogress': '#fff3cd', // Darker Light Yellow
+              'kanban-inprogress': '#fff3cd', 
               'kanban-inprogress-text': '#d48806',
-              'kanban-done': '#e6ffed', // Darker Light Green
+              'kanban-done': '#e6ffed', 
               'kanban-done-text': '#389e0d',
               'priority-low': '#22c55e',
               'priority-medium': '#f59e0b',
@@ -616,8 +615,8 @@
 
       function createTaskCard(taskData) {
           const taskCard = document.createElement('div');
-          taskCard.className = `task-card bg-white border border-slate-200 rounded-md p-3 shadow hover:shadow-md transition-shadow flex flex-col relative border-l-4 border-priority-${taskData.priority || 'medium'}`;
-          if (taskData.isPinned) taskCard.classList.add('task-pinned', '!border-amber-400', '!bg-amber-50');
+          taskCard.className = `task-card bg-white border border-slate-100 rounded-md p-3 shadow hover:shadow-md transition-shadow flex flex-col relative border-l-4 border-priority-${taskData.priority || 'medium'}`;
+          if (taskData.isPinned) taskCard.classList.add('task-pinned', '!border-amber-300', '!bg-amber-50'); // Lighter pinned border
           
           if (taskData.isBlocked) {
               taskCard.classList.add('blocked', '!bg-red-50', '!border-red-300', '!border-l-red-700');
@@ -802,7 +801,7 @@
                   status: newStatus, 
                   updatedAt: serverTimestamp(), 
                   isPinned: (newStatus === 'done' ? false : (taskToUpdate?.isPinned || false)),
-                  order: Date.now() // Update order when moving between columns
+                  order: Date.now() 
                 });
               
               if (newStatus === 'done' && oldStatus !== 'done') {
