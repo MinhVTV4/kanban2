@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Tailwind CSS - Cập Nhật Sửa/Chi Tiết)</title>
+    <title>Bảng Kanban Task (Tailwind CSS - Sắp Xếp Trong Cột)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -644,11 +644,11 @@
           pinButton.onclick = (e) => { e.stopPropagation(); togglePinTask(taskData); };
           cardActions.appendChild(pinButton);
 
-          const editButton = document.createElement('button'); // CHANGED: Was moreButton
+          const editButton = document.createElement('button'); 
           editButton.className = 'p-1 rounded text-slate-400 hover:bg-slate-200 hover:text-slate-600';
-          editButton.innerHTML = iconEditPencil; // CHANGED: New edit icon
+          editButton.innerHTML = iconEditPencil; 
           editButton.title = "Sửa công việc";
-          editButton.onclick = (e) => { e.stopPropagation(); openEditModal(taskData); }; // CHANGED: Click edit icon to open Edit Modal
+          editButton.onclick = (e) => { e.stopPropagation(); openEditModal(taskData); }; 
           cardActions.appendChild(editButton);
           cardHeader.appendChild(cardActions);
           taskCard.appendChild(cardHeader);
@@ -863,6 +863,53 @@
               const newStatus = targetColumnEl.dataset.status;
               if (oldStatus !== newStatus) {
                   await updateTaskStatusInFirestore(taskId, newStatus, oldStatus);
+              } else { // Reordering within the same column
+                  const mouseY = event.clientY;
+                  const targetTasksContainer = targetColumnEl.querySelector('.tasks-container');
+                  const draggedIsPinned = draggedTask.dataset.isPinned === 'true';
+                  let nextSiblingCard = null;
+
+                  const siblings = Array.from(targetTasksContainer.children)
+                                      .filter(child => child.classList.contains('task-card') && child !== draggedTask && (child.dataset.isPinned === 'true') === draggedIsPinned);
+
+                  for (const sibling of siblings) {
+                      const rect = sibling.getBoundingClientRect();
+                      if (mouseY < rect.top + rect.height / 2) {
+                          nextSiblingCard = sibling;
+                          break;
+                      }
+                  }
+                  
+                  let newOrder;
+                  const draggedTaskData = allTasks.find(t => t.id === taskId);
+
+                  if (nextSiblingCard) {
+                      const orderOfNextSibling = allTasks.find(t => t.id === nextSiblingCard.dataset.id)?.order || 0;
+                      let orderOfPrevSibling = 0;
+                      let tempPrev = nextSiblingCard.previousElementSibling;
+                      while(tempPrev) {
+                          if (tempPrev.classList.contains('task-card') && tempPrev !== draggedTask && (tempPrev.dataset.isPinned === 'true') === draggedIsPinned) {
+                              orderOfPrevSibling = allTasks.find(t => t.id === tempPrev.dataset.id)?.order || 0;
+                              break;
+                          }
+                          tempPrev = tempPrev.previousElementSibling;
+                      }
+                       if (orderOfPrevSibling === 0 && siblings.length > 0 && siblings[0] === nextSiblingCard) { // Dropped at the very top of its group
+                           newOrder = orderOfNextSibling - 1000; // Or some other logic for top
+                       } else {
+                           newOrder = (orderOfPrevSibling + orderOfNextSibling) / 2;
+                       }
+                  } else { // Dropped at the bottom of its group
+                      if (siblings.length > 0) {
+                          const orderOfLastSibling = allTasks.find(t => t.id === siblings[siblings.length - 1].dataset.id)?.order || 0;
+                          newOrder = orderOfLastSibling + 1000;
+                      } else { // Only item in its group (or becoming the only one)
+                          newOrder = Date.now();
+                      }
+                  }
+                  if (draggedTaskData && draggedTaskData.order !== newOrder) {
+                    await updateDoc(doc(db, TASKS_COLLECTION, taskId), { order: newOrder });
+                  }
               }
           });
       });
