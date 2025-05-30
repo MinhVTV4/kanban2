@@ -34,9 +34,35 @@
         .line-clamp-1 { -webkit-line-clamp: 1; }
         .line-clamp-2 { -webkit-line-clamp: 2; }
 
-        .dragging { opacity: 0.5 !important; border: 2px dashed #3b82f6 !important; }
-        .drag-over-column .tasks-container { background-color: #eff6ff !important; border: 1px dashed #93c5fd !important; }
-        .wip-limit-exceeded .tasks-container { border: 2px dashed #ef4444 !important; background-color: #fee2e2 !important; }
+        .dragging { opacity: 0.5 !important; border: 2px dashed #3b82f6 !important; } /* blue-500 */
+        .drag-over-column .tasks-container { background-color: #eff6ff !important; border: 1px dashed #93c5fd !important; } /* blue-50, blue-300 */
+        .wip-limit-exceeded .tasks-container { border: 2px dashed #ef4444 !important; background-color: #fee2e2 !important; } /* red-500, red-100 */
+
+        /* Filter bar transition */
+        .filter-bar {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-bottom: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out, margin-bottom 0.5s ease-in-out;
+        }
+        .filter-bar.filter-bar-visible {
+            max-height: 1000px; /* Adjust if filter bar content is taller */
+            opacity: 1;
+            padding-top: 1.25rem; /* Corresponds to p-5 in Tailwind */
+            padding-bottom: 1.25rem;
+            margin-bottom: 1.5rem; /* Corresponds to mb-6 in Tailwind */
+        }
+
+        /* Bottom Sheet transition */
+        #task-detail-bottom-sheet-overlay {
+            transition: opacity 0.3s ease-in-out;
+        }
+        #task-detail-bottom-sheet {
+            transition: transform 0.3s ease-out;
+        }
     </style>
     <script>
       tailwind.config = {
@@ -52,9 +78,9 @@
               'kanban-inprogress-text': '#d48806',
               'kanban-done': '#f6ffed',
               'kanban-done-text': '#389e0d',
-              'priority-low': '#22c55e',
-              'priority-medium': '#f59e0b',
-              'priority-high': '#ef4444',
+              'priority-low': '#22c55e',    // green-500
+              'priority-medium': '#f59e0b', // amber-500
+              'priority-high': '#ef4444',   // red-500
             }
           }
         }
@@ -76,7 +102,7 @@
             </button>
         </div>
 
-        <div class="filter-bar bg-white p-5 rounded-lg shadow mb-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-end max-h-0 opacity-0 transition-all duration-500 ease-in-out" id="filter-bar">
+        <div class="filter-bar bg-white rounded-lg shadow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-end" id="filter-bar">
             <div class="form-group"> <label for="search-term-input" class="block text-sm font-medium text-slate-700 mb-1">Tìm theo tiêu đề:</label> <input type="text" id="search-term-input" placeholder="Nhập từ khóa..." class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> </div>
             <div class="form-group"> <label for="filter-priority" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo ưu tiên:</label> <select id="filter-priority" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả ưu tiên</option> <option value="high">Cao</option> <option value="medium">Trung bình</option> <option value="low">Thấp</option> </select> </div>
             <div class="form-group"> <label for="filter-assignee" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo người thực hiện:</label> <select id="filter-assignee" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả người thực hiện</option> </select> </div>
@@ -211,7 +237,7 @@
     </div>
 
     <div id="task-detail-bottom-sheet-overlay" class="fixed inset-0 bg-black/50 z-[1040] transition-opacity duration-300 opacity-0 hidden"></div>
-    <div id="task-detail-bottom-sheet" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl p-5 transform translate-y-full transition-transform duration-300 ease-out z-[1050] max-h-[85vh] overflow-y-auto">
+    <div id="task-detail-bottom-sheet" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl p-5 transform translate-y-full transition-transform duration-300 ease-out z-[1050] max-h-[85vh] overflow-y-auto hidden">
         <h3 id="bs-task-title" class="text-xl font-semibold text-sky-600 mb-3 pb-2 border-b border-slate-200">Chi tiết công việc</h3>
         <div id="bs-task-description" class="detail-item mb-3"><strong class="block text-slate-600 text-sm">Mô tả:</strong><p class="text-slate-700 text-sm leading-relaxed"></p></div>
         <div id="bs-task-assignee" class="detail-item text-sm mb-2" style="display: none;"><strong>Người làm:</strong> <span class="text-slate-600"></span></div>
@@ -344,12 +370,20 @@
       }
 
       function openModal(modalElement) {
-        modalElement.classList.remove('hidden');
-        modalElement.classList.add('flex'); // Use flex for centering
+        if (modalElement) {
+            modalElement.classList.remove('hidden');
+            modalElement.classList.add('flex');
+        } else {
+            console.error("Modal element not found for openModal");
+        }
       }
       function closeModal(modalElement) {
-        modalElement.classList.add('hidden');
-        modalElement.classList.remove('flex');
+        if (modalElement) {
+            modalElement.classList.add('hidden');
+            modalElement.classList.remove('flex');
+        } else {
+            console.error("Modal element not found for closeModal");
+        }
       }
 
       function openAddTaskModal() {
@@ -423,24 +457,39 @@
       closeArchivedModalBtn.addEventListener('click', closeArchivedTasksModal);
 
       function openBottomSheet(taskData) {
-        bsTaskTitle.textContent = taskData.title;
+        console.log("Opening bottom sheet for task:", taskData);
+        bsTaskTitle.textContent = taskData.title || "Không có tiêu đề";
         bsTaskDescription.textContent = taskData.description || '(Không có mô tả)';
 
-        bsTaskAssignee.style.display = taskData.assignee ? 'block' : 'none';
-        if(taskData.assignee) bsTaskAssignee.querySelector('span').textContent = taskData.assignee;
+        if (taskData.assignee) {
+            bsTaskAssignee.style.display = 'block';
+            bsTaskAssignee.querySelector('span').textContent = taskData.assignee;
+        } else {
+            bsTaskAssignee.style.display = 'none';
+        }
 
-        bsTaskDueDate.style.display = taskData.dueDate ? 'block' : 'none';
-        if(taskData.dueDate) {
+        if (taskData.dueDate) {
+            bsTaskDueDate.style.display = 'block';
             const dueDateSpan = bsTaskDueDate.querySelector('span');
             dueDateSpan.textContent = formatDateForDisplay(taskData.dueDate);
             dueDateSpan.className = 'text-slate-600'; // Reset classes
             const today = getTodayDateString();
-            if (taskData.dueDate < today) dueDateSpan.classList.add('text-red-600', 'font-semibold');
-            else {
+            if (taskData.dueDate < today) {
+                dueDateSpan.classList.add('text-red-600', 'font-semibold');
+                dueDateSpan.textContent += " (Quá hạn)";
+            } else {
                 const todayDate = new Date(today); const dueDateObj = new Date(taskData.dueDate);
                 const diffTime = dueDateObj - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                if (diffDays <= 1 && diffDays >=0 ) dueDateSpan.classList.add('text-amber-600', 'font-semibold');
+                if (diffDays === 0) {
+                    dueDateSpan.classList.add('text-amber-600', 'font-semibold');
+                    dueDateSpan.textContent += " (Hôm nay)";
+                } else if (diffDays === 1) {
+                    dueDateSpan.classList.add('text-amber-600', 'font-semibold');
+                    dueDateSpan.textContent += " (Ngày mai)";
+                }
             }
+        } else {
+            bsTaskDueDate.style.display = 'none';
         }
 
         bsTaskPriority.style.display = 'block';
@@ -467,19 +516,19 @@
             bsTaskCreatedAt.querySelector('span').textContent = formatDateForDisplay(taskData.createdAt.toDate().toISOString().split('T')[0]) + " " + taskData.createdAt.toDate().toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
         }
 
-        bottomSheet.classList.remove('translate-y-full');
-        bottomSheet.classList.add('translate-y-0', 'visible'); // Use visible to trigger display block
-        bottomSheetOverlay.classList.remove('opacity-0', 'hidden');
-        bottomSheetOverlay.classList.add('opacity-100', 'visible'); // Use visible to trigger display block
+        bottomSheetOverlay.classList.remove('hidden', 'opacity-0');
+        bottomSheetOverlay.classList.add('opacity-100');
+        bottomSheet.classList.remove('hidden', 'translate-y-full');
+        bottomSheet.classList.add('translate-y-0');
       }
 
       function closeBottomSheet() {
         bottomSheet.classList.add('translate-y-full');
-        bottomSheet.classList.remove('translate-y-0', 'visible');
+        bottomSheet.classList.remove('translate-y-0');
         bottomSheetOverlay.classList.add('opacity-0');
-        setTimeout(() => { // Wait for transition to finish before hiding
+        setTimeout(() => {
             bottomSheetOverlay.classList.add('hidden');
-            bottomSheet.classList.remove('visible'); // Ensure display:none is set after transition
+            bottomSheet.classList.add('hidden'); // Ensure it's hidden after transition
         }, 300);
       }
       closeBottomSheetBtn.addEventListener('click', closeBottomSheet);
@@ -500,7 +549,7 @@
               const wipLimit = parseInt(column.dataset.wipLimit, 10);
               const currentCount = currentTaskCounts[status] || 0;
               if (countBadge) countBadge.textContent = currentCount;
-              column.classList.remove('border-red-400', 'bg-red-50');
+              column.classList.remove('border-red-400', 'bg-red-50'); // Tailwind classes for WIP limit
               if (wipLimit !== -1 && currentCount >= wipLimit) {
                   column.classList.add('border-red-400', 'bg-red-50');
               }
@@ -508,6 +557,7 @@
       }
 
       async function addTaskToFirestore(title, description, status, priority, dueDate, assignee, tagsString) {
+        console.log("addTaskToFirestore called with:", {title, description, status, priority, dueDate, assignee, tagsString});
         if (!title.trim()) { showAlert("Tiêu đề không được để trống!"); return; }
         const columnElement = document.getElementById(status);
         if (!columnElement) { showAlert(`Lỗi: Không tìm thấy cột cho trạng thái "${status}".`); return; }
@@ -527,24 +577,23 @@
         }
         const tagsArray = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
         try {
-            await addDoc(collection(db, TASKS_COLLECTION), {
+            const docRef = await addDoc(collection(db, TASKS_COLLECTION), {
                 title, description, status, priority, dueDate, assignee,
                 tags: tagsArray, isBlocked: false, blockReason: "", createdAt: serverTimestamp(), isPinned: false
             });
+            console.log("Task added with ID: ", docRef.id);
             showAlert("Thêm công việc mới thành công!"); closeAddTaskModal();
         } catch (e) { console.error("Error adding task: ", e); showAlert("Lỗi thêm task: " + e.message); }
       }
 
       function createTaskCard(taskData) {
           const taskCard = document.createElement('div');
-          taskCard.className = `task-card bg-white border border-slate-200 rounded-md p-3 shadow hover:shadow-md transition-shadow flex flex-col relative priority-${taskData.priority || 'medium'}`;
-          if (taskData.isPinned) taskCard.classList.add('task-pinned', 'border-amber-400', 'bg-amber-50');
-          if (taskData.isBlocked) taskCard.classList.add('blocked', 'bg-red-50', 'border-red-300');
+          taskCard.className = `task-card bg-white border border-slate-200 rounded-md p-3 shadow hover:shadow-md transition-shadow flex flex-col relative border-l-4 border-priority-${taskData.priority || 'medium'}`;
+          if (taskData.isPinned) taskCard.classList.add('task-pinned', '!border-amber-400', '!bg-amber-50'); // Use ! to ensure override
+          if (taskData.isBlocked) taskCard.classList.add('blocked', '!bg-red-50', '!border-red-300', '!border-l-red-700');
           taskCard.setAttribute('draggable', 'true');
           taskCard.dataset.id = taskData.id;
           taskCard.dataset.status = taskData.status;
-          taskCard.dataset.priority = taskData.priority || 'medium';
-          taskCard.dataset.isPinned = taskData.isPinned ? 'true' : 'false';
 
           // Card Header
           const cardHeader = document.createElement('div');
@@ -552,7 +601,7 @@
           const titleText = document.createElement('p');
           titleText.className = 'task-card-title-text text-sm font-semibold text-slate-800 flex-grow cursor-pointer line-clamp-2 leading-tight';
           titleText.textContent = taskData.title;
-          titleText.onclick = () => openEditModal(taskData); // Click title to edit
+          titleText.onclick = () => openEditModal(taskData);
           cardHeader.appendChild(titleText);
 
           const cardActions = document.createElement('div');
@@ -771,6 +820,7 @@
           });
       }
       function applyAllFilters() {
+          console.log("Applying filters...");
           const searchTerm = searchTermInput.value.toLowerCase(); const selectedPriority = filterPrioritySelect.value;
           const selectedAssignee = filterAssigneeSelect.value; const selectedTag = filterTagSelect.value;
           const selectedBlocked = filterBlockedSelect.value; const selectedDueDate = filterDueDateSelect.value;
@@ -802,9 +852,10 @@
           renderFilteredTasks(filteredTasks);
       }
       function renderFilteredTasks(tasksToRender) {
+          console.log("Rendering filtered tasks, count:", tasksToRender.length);
           kanbanColumns.forEach(column => {
               const container = column.querySelector('.tasks-container');
-              container.innerHTML = ''; container.classList.remove('empty');
+              container.innerHTML = ''; container.classList.remove('empty', 'border-2', 'border-dashed', 'border-slate-300', 'rounded-md', 'p-4', 'mt-2.5');
           });
           currentTaskCounts = { todo: 0, inprogress: 0, done: 0 };
           tasksToRender.forEach((taskData) => {
@@ -826,9 +877,9 @@
                   const columnTitleElement = column.querySelector('.column-header h2');
                   const tabButton = document.getElementById(`tab-${status}`);
                   let columnDisplayName = status;
-                  if (columnTitleElement && columnTitleElement.offsetParent !== null) {
+                  if (columnTitleElement && columnTitleElement.offsetParent !== null) { // Check if desktop header is visible
                       columnDisplayName = columnTitleElement.textContent.trim();
-                  } else if (tabButton) {
+                  } else if (tabButton) { // Fallback to tab name for mobile or if header is hidden
                      columnDisplayName = Array.from(tabButton.childNodes).filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent.trim()).join('') || status;
                   }
                   if (hasActiveFilters) message = `Không có công việc nào khớp bộ lọc.`;
@@ -850,13 +901,14 @@
           currentActiveMobileColumnId = status;
           mobileTabButtons.forEach(btn => {
               btn.classList.remove('active-tab', 'text-sky-600', 'border-sky-600', 'text-kanban-todo-text', 'border-kanban-todo-text', 'text-kanban-inprogress-text', 'border-kanban-inprogress-text', 'text-kanban-done-text', 'border-kanban-done-text');
-              btn.classList.add('text-slate-600', 'border-transparent');
+              btn.classList.add('text-slate-600', 'border-transparent'); // Default inactive state
               if (btn.dataset.status === status) {
                 btn.classList.add('active-tab');
+                // Apply specific active colors based on status
                 if (status === 'todo') btn.classList.add('text-kanban-todo-text', 'border-kanban-todo-text');
                 else if (status === 'inprogress') btn.classList.add('text-kanban-inprogress-text', 'border-kanban-inprogress-text');
                 else if (status === 'done') btn.classList.add('text-kanban-done-text', 'border-kanban-done-text');
-                else btn.classList.add('text-sky-600', 'border-sky-600');
+                else btn.classList.add('text-sky-600', 'border-sky-600'); // Fallback active color
               }
           });
           kanbanColumns.forEach(col => {
@@ -868,13 +920,14 @@
           button.addEventListener('click', () => { setActiveMobileColumn(button.dataset.status); });
       });
       function handleMobileLayout() {
-          if (window.innerWidth < 768) {
+          if (window.innerWidth < 768) { // md breakpoint
               kanbanMobileTabs.style.display = 'flex';
               setActiveMobileColumn(currentActiveMobileColumnId);
           } else {
               kanbanMobileTabs.style.display = 'none';
               kanbanColumns.forEach(col => {
-                  col.style.display = 'flex'; col.classList.remove('active-mobile-column');
+                  col.style.display = 'flex'; // Ensure all columns are visible on desktop
+                  col.classList.remove('active-mobile-column');
               });
           }
       }
@@ -882,6 +935,7 @@
 
       const q = query(collection(db, TASKS_COLLECTION));
       onSnapshot(q, (querySnapshot) => {
+          console.log("Firestore snapshot received:", querySnapshot.docs.length, "documents");
           allTasks = [];
           querySnapshot.forEach((docSnap) => { allTasks.push({ ...docSnap.data(), id: docSnap.id }); });
           allTasks.sort((a, b) => {
