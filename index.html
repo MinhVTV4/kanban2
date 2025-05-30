@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Kanban Task (Giao Diện Mới)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f0f2f5;
+            color: #333;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1400px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1890ff;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        /* --- Toggle Filter Button --- */
+        .toggle-filter-container {
+            background-color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        #toggle-filter-bar-btn {
+            padding: 10px 20px;
+            background-color: #52c41a; /* Green color */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        #toggle-filter-bar-btn:hover {
+            background-color: #389e0d;
+        }
+        #toggle-filter-bar-btn .icon {
+            margin-right: 8px;
+        }
+
+
+        /* Filter Bar Styling */
+        .filter-bar {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            align-items: center;
+            overflow: hidden;
+            max-height: 0; /* Collapsed by default */
+            opacity: 0;
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out, margin-bottom 0.5s ease-in-out;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-bottom: 0; /* No margin when collapsed */
+        }
+        .filter-bar.filter-bar-visible {
+            max-height: 1000px; /* Large enough to accommodate content */
+            opacity: 1;
+            padding-top: 20px; /* Restore padding */
+            padding-bottom: 20px; /* Restore padding */
+            margin-bottom: 30px; /* Restore margin */
+        }
+
+        .filter-bar .form-group { display: flex; flex-direction: column; }
+        .filter-bar label { font-size: 0.85rem; color: #595959; margin-bottom: 5px; }
+        .filter-bar input[type="text"],
+        .filter-bar select {
+            padding: 10px; border: 1px solid #d9d9d9; border-radius: 6px;
+            font-size: 0.95rem; width: 100%; box-sizing: border-box;
+        }
+        .filter-bar input[type="text"]:focus,
+        .filter-bar select:focus {
+            border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2); outline: none;
+        }
+        .filter-bar .actions {
+            grid-column: 1 / -1; display: flex; gap: 10px; justify-content: flex-end;
+        }
+         @media (min-width: 992px) {
+            .filter-bar .actions { grid-column: auto; grid-row: 1; align-self: end; }
+        }
+        .filter-bar button {
+            padding: 10px 15px; background-color: #1890ff; color: white;
+            border: none; border-radius: 6px; cursor: pointer; font-size: 0.95rem;
+            font-weight: 500; transition: background-color 0.3s ease;
+        }
+        .filter-bar button.clear-filter-btn { background-color: #ff4d4f; }
+        .filter-bar button.clear-filter-btn:hover { background-color: #f5222d; }
+        .filter-bar button:hover { background-color: #40a9ff; }
+
+
+        /* FAB for Add Task */
+        .fab-add-task {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 28px;
+            line-height: 60px; /* Center icon vertically */
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            z-index: 999;
+        }
+        .fab-add-task:hover {
+            background-color: #40a9ff;
+            transform: scale(1.1);
+        }
+
+
+        /* Kanban Board Styling */
+        .kanban-board { display: flex; gap: 25px; justify-content: space-around; flex-wrap: wrap; }
+        .kanban-column {
+            background-color: #f9f9f9; border-radius: 8px; padding: 20px;
+            width: 350px; min-height: 450px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex; flex-direction: column; transition: background-color 0.3s ease, border 0.3s ease;
+        }
+        .kanban-column h2 {
+            margin-top: 0; margin-bottom: 25px; font-size: 1.3rem; color: #3f51b5;
+            text-align: center; border-bottom: 2px solid #e8e8e8; padding-bottom: 15px; font-weight: 600;
+        }
+        .kanban-column h2 .task-count-display { font-size: 1rem; color: #757575; font-weight: normal; }
+        .tasks-container {
+            background-color: #fff; border-radius: 6px; padding: 15px;
+            min-height: 250px; flex-grow: 1; transition: background-color 0.2s ease;
+            border: 1px dashed transparent;
+        }
+        .tasks-container.empty {
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; color: #aaa; font-style: italic; min-height: 150px;
+        }
+
+        /* Task Card Styling (existing styles remain the same) */
+        .task-card {
+            background-color: #ffffff; border: 1px solid #e8e8e8; border-left: 6px solid transparent;
+            border-radius: 6px; padding: 15px 20px; margin-bottom: 12px; cursor: grab;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07); transition: all 0.2s ease; position: relative;
+        }
+        .task-card.priority-high { border-left-color: #ff4d4f; }
+        .task-card.priority-medium { border-left-color: #faad14; }
+        .task-card.priority-low { border-left-color: #52c41a; }
+        .task-card.due-overdue { background-color: #fff1f0; border-color: #ffccc7; }
+        .task-card.due-soon { background-color: #fffbe6; border-color: #ffe58f; }
+        .task-card.blocked {
+            background-color: #fff1f0; border-left-color: #a8071a !important; border-color: #ffccc7;
+        }
+        .blocked-icon-wrapper { display: flex; align-items: center; margin-top: 8px; }
+        .blocked-icon {
+            color: #a8071a; font-weight: bold; cursor: help; font-size: 0.8em;
+            margin-right: 6px; padding: 3px 6px; background-color: #ffccc7;
+            border-radius: 4px; display: inline-flex; align-items: center;
+        }
+        .blocked-icon svg { width: 1em; height: 1em; margin-right: 4px; }
+        .block-reason-text { font-size: 0.8em; color: #8c8c8c; font-style: italic; }
+        .task-card-content { cursor: pointer; }
+        .task-card:active { cursor: grabbing; box-shadow: 0 6px 12px rgba(0,0,0,0.12); transform: scale(1.03); }
+        .task-card h4 { margin-top: 0; margin-bottom: 8px; font-size: 1.05rem; color: #0056b3; font-weight: 600; }
+        .task-card p.task-description { font-size: 0.9rem; color: #595959; margin-bottom: 12px; white-space: pre-wrap; }
+        .task-details { margin-top: 10px; font-size: 0.8rem; color: #8c8c8c; }
+        .task-detail-item { margin-bottom: 4px; }
+        .task-detail-item strong { color: #595959; }
+        .task-detail-item .due-date.overdue { color: #ff4d4f; font-weight: bold; }
+        .task-detail-item .due-date.soon { color: #faad14; font-weight: bold; }
+        .task-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+        .task-tag {
+            background-color: #e6f7ff; color: #1890ff; padding: 2px 8px;
+            border-radius: 4px; font-size: 0.75em; font-weight: 500;
+        }
+        .task-card .task-meta {
+            font-size: 0.8rem; color: #8c8c8c; margin-top: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .task-card .task-meta .task-priority-label {
+            padding: 3px 8px; border-radius: 4px; font-weight: bold;
+            text-transform: uppercase; font-size: 0.75em;
+        }
+        .task-card.priority-high .task-priority-label { background-color: #ff4d4f; color: white; }
+        .task-card.priority-medium .task-priority-label { background-color: #faad14; color: #262626;}
+        .task-card.priority-low .task-priority-label { background-color: #52c41a; color: white; }
+        .task-card .task-actions { text-align: right; margin-top: 8px; }
+        .task-card .delete-btn {
+            background: none; border: none; color: #ff4d4f; cursor: pointer;
+            font-size: 0.9rem; padding: 6px 8px; border-radius: 4px;
+            transition: color 0.2s, background-color 0.2s;
+        }
+        .task-card .delete-btn:hover { color: #cf1322; background-color: #fff1f0; }
+
+        /* Drag and Drop Styling (existing styles remain the same) */
+        .dragging { opacity: 0.4; border: 2px dashed #1890ff; }
+        .drag-over-column .tasks-container { background-color: #e6f7ff !important; border: 1px dashed #91d5ff; }
+        .wip-limit-exceeded .tasks-container { border: 2px dashed #ff4d4f !important; background-color: #fff1f0 !important; }
+        .column-at-wip-limit { border: 2px solid #ff7875; background-color: #fff7e6; }
+        .column-at-wip-limit h2 .task-count-display::after {
+            content: " (WIP Limit!)"; color: #ff4d4f; font-weight: bold; font-size: 0.8em; margin-left: 5px;
+        }
+
+        /* Modal Styling (common for Edit and Add Task Modals) */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: #fff; margin: auto; padding: 30px; border: none; border-radius: 8px;
+            width: 90%; max-width: 600px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-content h3 {
+            margin-top: 0; color: #1890ff; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; font-weight: 600;
+        }
+        .modal-content label { display: block; margin-top: 15px; margin-bottom: 8px; font-weight: 500; color: #595959; }
+        .modal-content input[type="text"],
+        .modal-content input[type="date"],
+        .modal-content textarea,
+        .modal-content select {
+            width: 100%; box-sizing: border-box; padding: 12px; margin-bottom: 15px;
+            border: 1px solid #d9d9d9; border-radius: 6px; font-size: 1rem;
+        }
+        .modal-content input[type="text"]:focus,
+        .modal-content input[type="date"]:focus,
+        .modal-content textarea:focus,
+        .modal-content select:focus {
+            border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2); outline: none;
+        }
+        .modal-content input[type="checkbox"] { /* Specific to edit modal */
+            margin-right: 8px; vertical-align: middle; width: auto; height: 1.1em; accent-color: #1890ff;
+        }
+        .modal-content .block-reason-container { margin-top: 10px; } /* Specific to edit modal */
+        .modal-content textarea { min-height: 90px; resize: vertical; }
+        .modal-buttons { margin-top: 25px; text-align: right; }
+        .modal-buttons button {
+            padding: 12px 25px; border-radius: 6px; cursor: pointer; font-size: 1rem;
+            border: none; margin-left: 12px; font-weight: 500;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .modal-buttons .save-btn { background-color: #1890ff; color: white; }
+        .modal-buttons .save-btn:hover { background-color: #40a9ff; }
+        .modal-buttons .cancel-btn { background-color: #f0f0f0; color: #595959; border: 1px solid #d9d9d9;}
+        .modal-buttons .cancel-btn:hover { background-color: #e0e0e0; }
+        .modal-buttons button:active { transform: scale(0.98); }
+        .close-modal-btn { /* Common for all modals */
+            color: #aaa; float: right; font-size: 32px; font-weight: bold; line-height: 1;
+        }
+        .close-modal-btn:hover, .close-modal-btn:focus { color: #595959; text-decoration: none; cursor: pointer; }
+
+        /* Custom Alert Styling (existing styles remain the same) */
+        .custom-alert-overlay { /* ... */ }
+        .custom-alert-box { /* ... */ }
+        .custom-alert-box p { /* ... */ }
+        .custom-alert-box button { /* ... */ }
+        .custom-alert-box button:hover { /* ... */ }
+
+        /* Responsive (existing styles remain largely the same, minor adjustments might be needed) */
+        @media (max-width: 1250px) { /* ... */ }
+        @media (max-width: 991px) { /* ... */ }
+        @media (max-width: 768px) { /* ... */ }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1>Bảng Kanban Task</h1>
+
+        <div class="toggle-filter-container">
+            <button id="toggle-filter-bar-btn"><span class="icon">☰</span> Hiện Bộ Lọc</button>
+        </div>
+
+        <div class="filter-bar" id="filter-bar">
+            <div class="form-group">
+                <label for="search-term-input">Tìm theo tiêu đề:</label>
+                <input type="text" id="search-term-input" placeholder="Nhập từ khóa...">
+            </div>
+            <div class="form-group">
+                <label for="filter-priority">Lọc theo ưu tiên:</label>
+                <select id="filter-priority">
+                    <option value="">Tất cả ưu tiên</option>
+                    <option value="high">Cao</option>
+                    <option value="medium">Trung bình</option>
+                    <option value="low">Thấp</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="filter-assignee">Lọc theo người thực hiện:</label>
+                <select id="filter-assignee">
+                    <option value="">Tất cả người thực hiện</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="filter-tag">Lọc theo thẻ:</label>
+                <select id="filter-tag">
+                    <option value="">Tất cả thẻ</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="filter-blocked">Lọc theo trạng thái chặn:</label>
+                <select id="filter-blocked">
+                    <option value="">Tất cả</option>
+                    <option value="yes">Bị chặn</option>
+                    <option value="no">Không bị chặn</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="filter-due-date">Lọc theo ngày đến hạn:</label>
+                <select id="filter-due-date">
+                    <option value="">Tất cả ngày</option>
+                    <option value="overdue">Quá hạn</option>
+                    <option value="today">Hôm nay</option>
+                    <option value="next7days">Trong 7 ngày tới</option>
+                    <option value="noduedate">Không có ngày đến hạn</option>
+                </select>
+            </div>
+            <div class="actions">
+                <button id="apply-filters-btn">Áp dụng lọc</button>
+                <button id="clear-filters-btn" class="clear-filter-btn">Xóa bộ lọc</button>
+            </div>
+        </div>
+
+        <button id="fab-add-task" class="fab-add-task" title="Thêm công việc mới">+</button>
+
+        <div class="kanban-board">
+            <div class="kanban-column" id="todo" data-status="todo" data-wip-limit="-1">
+                <h2>Cần làm <span class="task-count-display">(0)</span></h2>
+                <div class="tasks-container"></div>
+            </div>
+            <div class="kanban-column" id="inprogress" data-status="inprogress" data-wip-limit="3">
+                <h2>Đang làm <span class="task-count-display">(0)</span></h2>
+                <div class="tasks-container"></div>
+            </div>
+            <div class="kanban-column" id="done" data-status="done" data-wip-limit="-1">
+                <h2>Hoàn thành <span class="task-count-display">(0)</span></h2>
+                <div class="tasks-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-task-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="close-add-task-modal-btn">&times;</span>
+            <h3>Thêm công việc mới</h3>
+            <label for="add-modal-task-title">Tiêu đề:</label>
+            <input type="text" id="add-modal-task-title" placeholder="Nhập tiêu đề...">
+
+            <label for="add-modal-task-desc">Mô tả:</label>
+            <textarea id="add-modal-task-desc" placeholder="Mô tả chi tiết (tùy chọn)..."></textarea>
+
+            <label for="add-modal-task-status">Trạng thái:</label>
+            <select id="add-modal-task-status">
+                <option value="todo">Cần làm</option>
+                <option value="inprogress">Đang làm</option>
+                <option value="done">Hoàn thành</option>
+            </select>
+
+            <label for="add-modal-task-priority">Độ ưu tiên:</label>
+            <select id="add-modal-task-priority">
+                <option value="medium">Trung bình</option>
+                <option value="high">Cao</option>
+                <option value="low">Thấp</option>
+            </select>
+
+            <label for="add-modal-task-due-date">Ngày đến hạn:</label>
+            <input type="date" id="add-modal-task-due-date">
+
+            <label for="add-modal-task-assignee">Người thực hiện:</label>
+            <input type="text" id="add-modal-task-assignee" placeholder="Tên người thực hiện...">
+
+            <label for="add-modal-task-tags">Thẻ (cách nhau bởi dấu phẩy):</label>
+            <input type="text" id="add-modal-task-tags" placeholder="Ví dụ: bug, feature, urgent">
+
+            <div class="modal-buttons">
+                <button type="button" class="cancel-btn" id="cancel-add-task-btn">Hủy</button>
+                <button type="button" class="save-btn" id="save-new-task-btn">Thêm Task</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="edit-task-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" id="close-edit-modal-btn">&times;</span>
+            <h3>Chỉnh sửa công việc</h3>
+            <input type="hidden" id="edit-task-id">
+            <label for="edit-task-title">Tiêu đề:</label>
+            <input type="text" id="edit-task-title">
+            <label for="edit-task-description">Mô tả:</label>
+            <textarea id="edit-task-description"></textarea>
+            <label for="edit-task-status">Trạng thái:</label>
+            <select id="edit-task-status">
+                <option value="todo">Cần làm</option>
+                <option value="inprogress">Đang làm</option>
+                <option value="done">Hoàn thành</option>
+            </select>
+            <label for="edit-task-priority">Độ ưu tiên:</label>
+            <select id="edit-task-priority">
+                <option value="low">Thấp</option>
+                <option value="medium">Trung bình</option>
+                <option value="high">Cao</option>
+            </select>
+            <label for="edit-task-due-date">Ngày đến hạn:</label>
+            <input type="date" id="edit-task-due-date">
+            <label for="edit-task-assignee">Người thực hiện:</label>
+            <input type="text" id="edit-task-assignee" placeholder="Tên người thực hiện...">
+            <label for="edit-task-tags">Thẻ (cách nhau bởi dấu phẩy):</label>
+            <input type="text" id="edit-task-tags" placeholder="Ví dụ: bug, feature, urgent">
+            <div>
+                <label for="edit-task-blocked">
+                    <input type="checkbox" id="edit-task-blocked"> Bị chặn?
+                </label>
+            </div>
+            <div class="block-reason-container" id="edit-block-reason-container" style="display: none;">
+                <label for="edit-task-block-reason">Lý do bị chặn:</label>
+                <textarea id="edit-task-block-reason"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="cancel-btn" id="cancel-edit-task-btn">Hủy</button>
+                <button type="button" class="save-btn" id="save-edit-task-btn">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-alert-overlay" class="custom-alert-overlay">
+        <div class="custom-alert-box">
+            <p id="custom-alert-message"></p>
+            <button id="custom-alert-ok-btn">OK</button>
+        </div>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+      import {
+          getFirestore, collection, addDoc, query, onSnapshot,
+          doc, updateDoc, deleteDoc, serverTimestamp
+      } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCWfij5n2cTb1jGkUreaLtwi7IENVxssbc",
+        authDomain: "testeng-7782.firebaseapp.com",
+        projectId: "testeng-7782",
+        storageBucket: "testeng-7782.firebasestorage.app",
+        messagingSenderId: "741104739298",
+        appId: "1:741104739298:web:fde4d379f83c139c33cfbb"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // === DOM Elements (General) ===
+      const kanbanColumns = document.querySelectorAll('.kanban-column');
+      const customAlertOverlay = document.getElementById('custom-alert-overlay');
+      const customAlertMessage = document.getElementById('custom-alert-message');
+      const customAlertOkBtn = document.getElementById('custom-alert-ok-btn');
+
+      // === DOM Elements (Filter Bar) ===
+      const toggleFilterBarBtn = document.getElementById('toggle-filter-bar-btn');
+      const filterBar = document.getElementById('filter-bar');
+      const searchTermInput = document.getElementById('search-term-input');
+      const filterPrioritySelect = document.getElementById('filter-priority');
+      const filterAssigneeSelect = document.getElementById('filter-assignee');
+      const filterTagSelect = document.getElementById('filter-tag');
+      const filterBlockedSelect = document.getElementById('filter-blocked');
+      const filterDueDateSelect = document.getElementById('filter-due-date');
+      const applyFiltersBtn = document.getElementById('apply-filters-btn');
+      const clearFiltersBtn = document.getElementById('clear-filters-btn');
+
+      // === DOM Elements (Add Task FAB & Modal) ===
+      const fabAddTaskBtn = document.getElementById('fab-add-task');
+      const addTaskModal = document.getElementById('add-task-modal');
+      const closeAddTaskModalBtn = document.getElementById('close-add-task-modal-btn');
+      const cancelAddTaskBtn = document.getElementById('cancel-add-task-btn');
+      const saveNewTaskBtn = document.getElementById('save-new-task-btn');
+      const addModalTaskTitleInput = document.getElementById('add-modal-task-title');
+      const addModalTaskDescInput = document.getElementById('add-modal-task-desc');
+      const addModalTaskStatusInput = document.getElementById('add-modal-task-status');
+      const addModalTaskPriorityInput = document.getElementById('add-modal-task-priority');
+      const addModalTaskDueDateInput = document.getElementById('add-modal-task-due-date');
+      const addModalTaskAssigneeInput = document.getElementById('add-modal-task-assignee');
+      const addModalTaskTagsInput = document.getElementById('add-modal-task-tags');
+
+
+      // === DOM Elements (Edit Task Modal - existing) ===
+      const editTaskModal = document.getElementById('edit-task-modal');
+      const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
+      const cancelEditTaskBtn = document.getElementById('cancel-edit-task-btn');
+      const saveEditTaskBtn = document.getElementById('save-edit-task-btn');
+      const editTaskIdInput = document.getElementById('edit-task-id');
+      const editTaskTitleInput = document.getElementById('edit-task-title');
+      const editTaskDescInput = document.getElementById('edit-task-description');
+      const editTaskStatusInput = document.getElementById('edit-task-status');
+      const editTaskPriorityInput = document.getElementById('edit-task-priority');
+      const editTaskDueDateInput = document.getElementById('edit-task-due-date');
+      const editTaskAssigneeInput = document.getElementById('edit-task-assignee');
+      const editTaskTagsInput = document.getElementById('edit-task-tags');
+      const editTaskBlockedCheckbox = document.getElementById('edit-task-blocked');
+      const editBlockReasonContainer = document.getElementById('edit-block-reason-container');
+      const editTaskBlockReasonInput = document.getElementById('edit-task-block-reason');
+
+
+      let draggedTask = null;
+      let currentEditingTaskId = null;
+      const TASKS_COLLECTION = 'tasks_kanban_public_v9_ui_fab';
+      const priorityMap = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
+      let currentTaskCounts = { todo: 0, inprogress: 0, done: 0 };
+      let allTasks = [];
+
+      // === Custom Alert Function ===
+      function showAlert(message) {
+          customAlertMessage.textContent = message;
+          customAlertOverlay.style.display = 'flex';
+      }
+      customAlertOkBtn.addEventListener('click', () => {
+          customAlertOverlay.style.display = 'none';
+      });
+
+      // === Helper Functions ===
+      function formatDateForDisplay(dateString) {
+          if (!dateString) return 'N/A';
+          const date = new Date(dateString);
+          const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+          const correctedDate = new Date(date.getTime() + userTimezoneOffset);
+          return correctedDate.toLocaleDateString('vi-VN', {
+              day: '2-digit', month: '2-digit', year: 'numeric'
+          });
+      }
+
+      function getTodayDateString() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      // === Add Task Modal Logic ===
+      function openAddTaskModal() {
+        addModalTaskTitleInput.value = '';
+        addModalTaskDescInput.value = '';
+        addModalTaskStatusInput.value = 'todo';
+        addModalTaskPriorityInput.value = 'medium';
+        addModalTaskDueDateInput.value = '';
+        addModalTaskAssigneeInput.value = '';
+        addModalTaskTagsInput.value = '';
+        addTaskModal.style.display = 'flex';
+      }
+      function closeAddTaskModal() {
+        addTaskModal.style.display = 'none';
+      }
+      fabAddTaskBtn.addEventListener('click', openAddTaskModal);
+      closeAddTaskModalBtn.addEventListener('click', closeAddTaskModal);
+      cancelAddTaskBtn.addEventListener('click', closeAddTaskModal);
+      saveNewTaskBtn.addEventListener('click', () => {
+          const title = addModalTaskTitleInput.value;
+          const description = addModalTaskDescInput.value;
+          const status = addModalTaskStatusInput.value;
+          const priority = addModalTaskPriorityInput.value;
+          const dueDate = addModalTaskDueDateInput.value;
+          const assignee = addModalTaskAssigneeInput.value.trim();
+          const tags = addModalTaskTagsInput.value.trim();
+          addTaskToFirestore(title, description, status, priority, dueDate, assignee, tags);
+          // addTaskToFirestore now clears inputs on success and shows alert
+      });
+
+
+      // === Edit Task Modal Logic ===
+      editTaskBlockedCheckbox.addEventListener('change', function() {
+          editBlockReasonContainer.style.display = this.checked ? 'block' : 'none';
+          if (!this.checked) {
+              editTaskBlockReasonInput.value = '';
+          }
+      });
+      function openEditModal(task) {
+          currentEditingTaskId = task.id;
+          editTaskIdInput.value = task.id;
+          editTaskTitleInput.value = task.title;
+          editTaskDescInput.value = task.description || '';
+          editTaskStatusInput.value = task.status;
+          editTaskPriorityInput.value = task.priority || 'medium';
+          editTaskDueDateInput.value = task.dueDate || '';
+          editTaskAssigneeInput.value = task.assignee || '';
+          editTaskTagsInput.value = Array.isArray(task.tags) ? task.tags.join(', ') : '';
+          editTaskBlockedCheckbox.checked = task.isBlocked || false;
+          editTaskBlockReasonInput.value = task.blockReason || '';
+          editBlockReasonContainer.style.display = editTaskBlockedCheckbox.checked ? 'block' : 'none';
+          editTaskModal.style.display = 'flex';
+      }
+      function closeEditModal() {
+          editTaskModal.style.display = 'none';
+          currentEditingTaskId = null;
+          // No need to clear fields here as openEditModal populates them
+      }
+      closeEditModalBtn.onclick = closeEditModal;
+      cancelEditTaskBtn.onclick = closeEditModal;
+      // Close modals on window click outside
+      window.onclick = function(event) {
+          if (event.target == editTaskModal) {
+              closeEditModal();
+          }
+          if (event.target == addTaskModal) {
+              closeAddTaskModal();
+          }
+          if (event.target == customAlertOverlay) {
+             customAlertOverlay.style.display = 'none';
+          }
+      };
+      saveEditTaskBtn.addEventListener('click', async () => {
+          if (!currentEditingTaskId) return;
+          const updatedTitle = editTaskTitleInput.value.trim();
+          const updatedDescription = editTaskDescInput.value.trim();
+          const updatedStatus = editTaskStatusInput.value;
+          const updatedPriority = editTaskPriorityInput.value;
+          const updatedDueDate = editTaskDueDateInput.value;
+          const updatedAssignee = editTaskAssigneeInput.value.trim();
+          const updatedTagsString = editTaskTagsInput.value.trim();
+          const updatedTags = updatedTagsString ? updatedTagsString.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+          const isBlocked = editTaskBlockedCheckbox.checked;
+          const blockReason = isBlocked ? editTaskBlockReasonInput.value.trim() : "";
+
+          if (!updatedTitle) { showAlert("Tiêu đề không được để trống!"); return; }
+          if (isBlocked && !blockReason) { showAlert("Vui lòng nhập lý do bị chặn!"); return; }
+
+          try {
+              const taskRef = doc(db, TASKS_COLLECTION, currentEditingTaskId);
+              await updateDoc(taskRef, {
+                  title: updatedTitle, description: updatedDescription, status: updatedStatus,
+                  priority: updatedPriority, dueDate: updatedDueDate, assignee: updatedAssignee,
+                  tags: updatedTags, isBlocked: isBlocked, blockReason: blockReason,
+                  updatedAt: serverTimestamp()
+              });
+              showAlert("Cập nhật công việc thành công!");
+              closeEditModal();
+          } catch (error) { console.error("Error updating task:", error); showAlert("Lỗi cập nhật task: " + error.message); }
+      });
+
+
+      // === Kanban App Logic ===
+      function updateColumnUI() {
+          kanbanColumns.forEach(column => {
+              const status = column.dataset.status;
+              const countDisplay = column.querySelector('.task-count-display');
+              const wipLimit = parseInt(column.dataset.wipLimit, 10);
+              const currentCount = currentTaskCounts[status] || 0;
+
+              if (countDisplay) countDisplay.textContent = `(${currentCount})`;
+              column.classList.remove('wip-limit-exceeded', 'column-at-wip-limit');
+              if (wipLimit !== -1 && currentCount >= wipLimit) {
+                  column.classList.add('column-at-wip-limit');
+              }
+          });
+      }
+
+      async function addTaskToFirestore(title, description, status, priority, dueDate, assignee, tagsString) {
+          if (!title.trim()) { showAlert("Tiêu đề không được để trống!"); return; }
+          const columnElement = document.getElementById(status);
+          if (!columnElement) {
+            console.error(`Column with id "${status}" not found.`);
+            showAlert(`Lỗi: Không tìm thấy cột cho trạng thái "${status}".`);
+            return;
+          }
+          const wipLimit = parseInt(columnElement.dataset.wipLimit, 10);
+          if (wipLimit !== -1 && currentTaskCounts[status] >= wipLimit) {
+              showAlert(`Cột "${columnElement.querySelector('h2').firstChild.textContent.trim()}" đã đạt giới hạn WIP (${wipLimit}). Không thể thêm task mới.`);
+              return;
+          }
+          const tagsArray = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+          try {
+              await addDoc(collection(db, TASKS_COLLECTION), {
+                  title, description, status, priority, dueDate, assignee,
+                  tags: tagsArray, isBlocked: false, blockReason: "", createdAt: serverTimestamp()
+              });
+              showAlert("Thêm công việc mới thành công!");
+              closeAddTaskModal(); // Close modal and inputs are cleared by openAddTaskModal next time
+          } catch (e) { console.error("Error adding task: ", e); showAlert("Lỗi thêm task: " + e.message); }
+      }
+
+      function createTaskCard(taskData) {
+          const taskCard = document.createElement('div');
+          taskCard.classList.add('task-card');
+          taskCard.setAttribute('draggable', 'true');
+          taskCard.dataset.id = taskData.id;
+          taskCard.dataset.status = taskData.status;
+          taskCard.dataset.priority = taskData.priority || 'medium';
+
+          taskCard.classList.remove('priority-high', 'priority-medium', 'priority-low', 'blocked', 'due-overdue', 'due-soon');
+          taskCard.classList.add(`priority-${taskData.priority || 'medium'}`);
+          if (taskData.isBlocked) taskCard.classList.add('blocked');
+
+          if (taskData.dueDate) {
+            const today = getTodayDateString();
+            const dueDate = taskData.dueDate;
+            if (dueDate < today) taskCard.classList.add('due-overdue');
+            else {
+                const todayDate = new Date(today); const dueDateObj = new Date(dueDate);
+                const diffTime = dueDateObj - todayDate;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays <= 1 && diffDays >=0) taskCard.classList.add('due-soon');
+            }
+          }
+
+          const contentWrapper = document.createElement('div');
+          contentWrapper.classList.add('task-card-content');
+          contentWrapper.onclick = (event) => { if (event.target.closest('.delete-btn')) return; openEditModal(taskData); };
+
+          const titleElement = document.createElement('h4'); titleElement.textContent = taskData.title;
+          const descElement = document.createElement('p'); descElement.classList.add('task-description'); descElement.textContent = taskData.description || '';
+          contentWrapper.appendChild(titleElement); contentWrapper.appendChild(descElement);
+
+          const detailsDiv = document.createElement('div'); detailsDiv.classList.add('task-details');
+          if (taskData.assignee) {
+              const assigneeP = document.createElement('p'); assigneeP.classList.add('task-detail-item');
+              assigneeP.innerHTML = `<strong>Người thực hiện:</strong> ${taskData.assignee}`; detailsDiv.appendChild(assigneeP);
+          }
+          if (taskData.dueDate) {
+              const dueDateP = document.createElement('p'); dueDateP.classList.add('task-detail-item');
+              const dueDateSpan = document.createElement('span'); dueDateSpan.classList.add('due-date');
+              dueDateSpan.textContent = formatDateForDisplay(taskData.dueDate);
+              const today = getTodayDateString();
+              if (taskData.dueDate < today) dueDateSpan.classList.add('overdue');
+              else {
+                const todayDate = new Date(today); const dueDateObj = new Date(taskData.dueDate);
+                const diffTime = dueDateObj - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays <= 1 && diffDays >=0) dueDateSpan.classList.add('soon');
+              }
+              dueDateP.innerHTML = `<strong>Đến hạn:</strong> `; dueDateP.appendChild(dueDateSpan); detailsDiv.appendChild(dueDateP);
+          }
+          if (detailsDiv.hasChildNodes()) contentWrapper.appendChild(detailsDiv);
+
+          if (taskData.tags && taskData.tags.length > 0) {
+              const tagsDiv = document.createElement('div'); tagsDiv.classList.add('task-tags');
+              taskData.tags.forEach(tagText => {
+                  const tagSpan = document.createElement('span'); tagSpan.classList.add('task-tag');
+                  tagSpan.textContent = tagText; tagsDiv.appendChild(tagSpan);
+              });
+              contentWrapper.appendChild(tagsDiv);
+          }
+
+          const metaDiv = document.createElement('div'); metaDiv.classList.add('task-meta');
+          const createdAtSpan = document.createElement('span');
+          createdAtSpan.textContent = `Tạo: ${taskData.createdAt && taskData.createdAt.toDate ? formatDateForDisplay(taskData.createdAt.toDate().toISOString().split('T')[0]) : 'N/A'}`;
+          const priorityLabelSpan = document.createElement('span'); priorityLabelSpan.classList.add('task-priority-label');
+          priorityLabelSpan.textContent = priorityMap[taskData.priority || 'medium'] || 'Trung bình';
+          metaDiv.appendChild(createdAtSpan); metaDiv.appendChild(priorityLabelSpan);
+          contentWrapper.appendChild(metaDiv);
+
+          if (taskData.isBlocked) {
+              const blockedInfoWrapper = document.createElement('div'); blockedInfoWrapper.classList.add('blocked-icon-wrapper');
+              const blockedSpan = document.createElement('span'); blockedSpan.classList.add('blocked-icon');
+              blockedSpan.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor" style="width:1em;height:1em;margin-right:4px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-5h2v2h-2v-2zm0-8h2v6h-2V7z"></path></svg> BỊ CHẶN`;
+              blockedInfoWrapper.appendChild(blockedSpan);
+              if (taskData.blockReason) {
+                  const reasonText = document.createElement('span'); reasonText.classList.add('block-reason-text');
+                  reasonText.textContent = taskData.blockReason; blockedInfoWrapper.appendChild(reasonText);
+                  blockedSpan.title = `Lý do: ${taskData.blockReason}`;
+              }
+              contentWrapper.appendChild(blockedInfoWrapper);
+          }
+
+          const deleteBtn = document.createElement('button'); deleteBtn.classList.add('delete-btn');
+          deleteBtn.innerHTML = '&times; Xóa'; deleteBtn.title = "Xóa công việc này";
+          deleteBtn.onclick = (event) => { event.stopPropagation(); if (confirm(`Bạn có chắc chắn muốn xóa công việc "${taskData.title}" không?`)) deleteTask(taskData.id); };
+          const actionsDiv = document.createElement('div'); actionsDiv.classList.add('task-actions'); actionsDiv.appendChild(deleteBtn);
+          taskCard.appendChild(contentWrapper); taskCard.appendChild(actionsDiv);
+          taskCard.addEventListener('dragstart', handleDragStart); taskCard.addEventListener('dragend', handleDragEnd);
+          return taskCard;
+      }
+
+      async function updateTaskStatusInFirestore(taskId, newStatus, oldStatus) {
+          const columnElement = document.getElementById(newStatus);
+          if (!columnElement) {
+            console.error(`Column with id "${newStatus}" not found for updating task status.`);
+            showAlert(`Lỗi: Không tìm thấy cột cho trạng thái "${newStatus}".`);
+            return false;
+          }
+          const wipLimit = parseInt(columnElement.dataset.wipLimit, 10);
+          if (wipLimit !== -1 && currentTaskCounts[newStatus] >= wipLimit && newStatus !== oldStatus) {
+             showAlert(`Cột "${columnElement.querySelector('h2').firstChild.textContent.trim()}" đã đạt giới hạn WIP (${wipLimit}). Không thể chuyển task.`); return false;
+          }
+          try {
+              const taskRef = doc(db, TASKS_COLLECTION, taskId);
+              await updateDoc(taskRef, { status: newStatus, updatedAt: serverTimestamp() }); return true;
+          } catch (error) { console.error("Error updating task status:", error); showAlert("Lỗi cập nhật trạng thái task: " + error.message); return false; }
+      }
+
+      async function deleteTask(taskId) {
+          try { await deleteDoc(doc(db, TASKS_COLLECTION, taskId)); showAlert("Xóa công việc thành công!"); }
+          catch (error) { console.error("Error deleting task:", error); showAlert("Lỗi xóa task: " + error.message); }
+      }
+
+      // --- Drag and Drop Handlers ---
+      function handleDragStart(event) {
+          draggedTask = event.target; event.dataTransfer.setData('text/plain', event.target.dataset.id);
+          setTimeout(() => { event.target.classList.add('dragging'); }, 0);
+      }
+      function handleDragEnd(event) {
+          if (draggedTask) draggedTask.classList.remove('dragging'); draggedTask = null;
+          kanbanColumns.forEach(col => col.classList.remove('drag-over-column'));
+      }
+      kanbanColumns.forEach(column => {
+          const tasksContainer = column.querySelector('.tasks-container');
+          tasksContainer.addEventListener('dragover', (event) => {
+              event.preventDefault(); const targetColumnEl = event.currentTarget.closest('.kanban-column');
+              if (targetColumnEl && draggedTask) {
+                  const targetStatus = targetColumnEl.dataset.status; const wipLimit = parseInt(targetColumnEl.dataset.wipLimit, 10);
+                  const currentCountInTarget = currentTaskCounts[targetStatus] || 0;
+                  targetColumnEl.classList.add('drag-over-column');
+                  if (draggedTask.dataset.status !== targetStatus && wipLimit !== -1 && currentCountInTarget >= wipLimit) {
+                      event.dataTransfer.dropEffect = 'none';
+                      targetColumnEl.classList.add('wip-limit-exceeded');
+                      targetColumnEl.querySelector('.tasks-container').classList.add('wip-limit-exceeded');
+                  } else {
+                      event.dataTransfer.dropEffect = 'move';
+                      targetColumnEl.classList.remove('wip-limit-exceeded');
+                      targetColumnEl.querySelector('.tasks-container').classList.remove('wip-limit-exceeded');
+                  }
+              }
+          });
+          tasksContainer.addEventListener('dragleave', (event) => {
+              const targetColumnEl = event.currentTarget.closest('.kanban-column');
+              if (targetColumnEl) {
+                targetColumnEl.classList.remove('drag-over-column', 'wip-limit-exceeded');
+                targetColumnEl.querySelector('.tasks-container').classList.remove('wip-limit-exceeded');
+              }
+          });
+          tasksContainer.addEventListener('drop', async (event) => {
+              event.preventDefault(); const targetColumnEl = event.currentTarget.closest('.kanban-column');
+               if (targetColumnEl && draggedTask) {
+                  targetColumnEl.classList.remove('drag-over-column', 'wip-limit-exceeded');
+                  targetColumnEl.querySelector('.tasks-container').classList.remove('wip-limit-exceeded');
+                  const taskId = draggedTask.dataset.id; const oldStatus = draggedTask.dataset.status; const newStatus = targetColumnEl.dataset.status;
+                  if (oldStatus !== newStatus) await updateTaskStatusInFirestore(taskId, newStatus, oldStatus);
+              }
+          });
+      });
+
+
+      // === Filtering Logic ===
+      toggleFilterBarBtn.addEventListener('click', () => {
+          filterBar.classList.toggle('filter-bar-visible');
+          if (filterBar.classList.contains('filter-bar-visible')) {
+              toggleFilterBarBtn.innerHTML = '<span class="icon">✕</span> Ẩn Bộ Lọc';
+          } else {
+              toggleFilterBarBtn.innerHTML = '<span class="icon">☰</span> Hiện Bộ Lọc';
+          }
+      });
+
+      function populateFilterOptions() {
+          const assignees = new Set();
+          const tags = new Set();
+
+          allTasks.forEach(task => {
+              if (task.assignee) assignees.add(task.assignee);
+              if (task.tags && Array.isArray(task.tags)) {
+                  task.tags.forEach(tag => tags.add(tag));
+              }
+          });
+
+          filterAssigneeSelect.innerHTML = '<option value="">Tất cả người thực hiện</option>';
+          Array.from(assignees).sort().forEach(assignee => {
+              const option = document.createElement('option');
+              option.value = assignee;
+              option.textContent = assignee;
+              filterAssigneeSelect.appendChild(option);
+          });
+
+          filterTagSelect.innerHTML = '<option value="">Tất cả thẻ</option>';
+          Array.from(tags).sort().forEach(tag => {
+              const option = document.createElement('option');
+              option.value = tag;
+              option.textContent = tag;
+              filterTagSelect.appendChild(option);
+          });
+      }
+
+      function applyAllFilters() {
+          const searchTerm = searchTermInput.value.toLowerCase();
+          const selectedPriority = filterPrioritySelect.value;
+          const selectedAssignee = filterAssigneeSelect.value;
+          const selectedTag = filterTagSelect.value;
+          const selectedBlocked = filterBlockedSelect.value;
+          const selectedDueDate = filterDueDateSelect.value;
+
+          const filteredTasks = allTasks.filter(task => {
+              if (searchTerm && !task.title.toLowerCase().includes(searchTerm)) return false;
+              if (selectedPriority && task.priority !== selectedPriority) return false;
+              if (selectedAssignee && task.assignee !== selectedAssignee) return false;
+              if (selectedTag && (!task.tags || !task.tags.includes(selectedTag))) return false;
+              if (selectedBlocked) {
+                  if (selectedBlocked === "yes" && !task.isBlocked) return false;
+                  if (selectedBlocked === "no" && task.isBlocked) return false;
+              }
+              if (selectedDueDate) {
+                  const today = new Date(getTodayDateString());
+                  today.setHours(0,0,0,0);
+                  if (selectedDueDate === "noduedate") {
+                      if (task.dueDate) return false;
+                  } else if (!task.dueDate) {
+                      return false;
+                  } else {
+                      const taskDueDate = new Date(task.dueDate);
+                      taskDueDate.setHours(0,0,0,0);
+                      if (selectedDueDate === "overdue") {
+                          if (taskDueDate >= today) return false;
+                      } else if (selectedDueDate === "today") {
+                          if (taskDueDate.getTime() !== today.getTime()) return false;
+                      } else if (selectedDueDate === "next7days") {
+                          const nextWeek = new Date(today);
+                          nextWeek.setDate(today.getDate() + 7);
+                          if (taskDueDate < today || taskDueDate > nextWeek) return false;
+                      }
+                  }
+              }
+              return true;
+          });
+          renderFilteredTasks(filteredTasks);
+      }
+
+      function renderFilteredTasks(tasksToRender) {
+          kanbanColumns.forEach(column => {
+              const container = column.querySelector('.tasks-container');
+              container.innerHTML = '';
+              container.classList.remove('empty');
+          });
+          currentTaskCounts = { todo: 0, inprogress: 0, done: 0 };
+
+          if (tasksToRender.length === 0 && !document.getElementById('search-term-input').value && !document.getElementById('filter-priority').value && !document.getElementById('filter-assignee').value && !document.getElementById('filter-tag').value && !document.getElementById('filter-blocked').value && !document.getElementById('filter-due-date').value) {
+             // If no filters are active and still no tasks, it means the board is truly empty
+              kanbanColumns.forEach(column => {
+                const container = column.querySelector('.tasks-container');
+                if (column.querySelectorAll('.task-card').length === 0) { // Check if column is empty for this status
+                    container.innerHTML = 'Chưa có công việc nào.';
+                    container.classList.add('empty');
+                }
+             });
+          } else if (tasksToRender.length === 0) {
+             // Filters are active, and no tasks match
+             kanbanColumns.forEach(column => {
+                const container = column.querySelector('.tasks-container');
+                container.innerHTML = 'Không có công việc nào khớp với bộ lọc.';
+                container.classList.add('empty');
+             });
+          } else {
+            tasksToRender.forEach((taskData) => {
+                if (!taskData.status || !currentTaskCounts.hasOwnProperty(taskData.status)) {
+                    taskData.status = 'todo';
+                }
+                currentTaskCounts[taskData.status]++;
+                const taskCardElement = createTaskCard(taskData);
+                const columnContainer = document.getElementById(taskData.status)?.querySelector('.tasks-container');
+                if (columnContainer) {
+                    columnContainer.appendChild(taskCardElement);
+                } else {
+                    console.warn(`Column for status "${taskData.status}" not found.`);
+                }
+            });
+          }
+          updateColumnUI();
+      }
+
+      applyFiltersBtn.addEventListener('click', applyAllFilters);
+      clearFiltersBtn.addEventListener('click', () => {
+          searchTermInput.value = '';
+          filterPrioritySelect.value = '';
+          filterAssigneeSelect.value = '';
+          filterTagSelect.value = '';
+          filterBlockedSelect.value = '';
+          filterDueDateSelect.value = '';
+          applyAllFilters();
+      });
+
+      // === Firestore Real-time Listener ===
+      const q = query(collection(db, TASKS_COLLECTION));
+      onSnapshot(q, (querySnapshot) => {
+          allTasks = [];
+          querySnapshot.forEach((docSnap) => {
+            allTasks.push({ ...docSnap.data(), id: docSnap.id });
+          });
+          allTasks.sort((a, b) => {
+            if (a.createdAt && b.createdAt) {
+                return b.createdAt.toMillis() - a.createdAt.toMillis();
+            } else if (a.createdAt) { return -1; }
+            else if (b.createdAt) { return 1; }
+            return 0;
+          });
+          populateFilterOptions();
+          applyAllFilters();
+      }, (error) => {
+          console.error("Error fetching tasks with onSnapshot: ", error);
+          showAlert("Lỗi tải danh sách công việc: " + error.message);
+      });
+
+    </script>
+</body>
+</html>
