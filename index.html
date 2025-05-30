@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Bottom Sheet & Thẻ Tóm Tắt)</title>
+    <title>Bảng Kanban Task (Cập Nhật Thẻ & Sửa)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -174,16 +174,16 @@
         }
 
         .task-card-header {
-            display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;
+            display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; /* Reduced margin */
         }
         .task-card-title-text {
             font-size: 0.9rem; color: #1f2937; font-weight: 600;
             margin: 0; flex-grow: 1; word-break: break-word;
             overflow: hidden; text-overflow: ellipsis;
             display: -webkit-box; -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical; line-height: 1.4; /* Adjusted for 2 lines */
-            max-height: calc(1.4em * 2);
-            /* No direct click for edit, use ... button */
+            -webkit-box-orient: vertical; line-height: 1.4;
+            max-height: calc(1.4em * 2); /* line-height * number of lines */
+            cursor: pointer; /* Make title clickable for edit */
         }
         .task-card-actions { display: flex; align-items: center; gap: 4px; margin-left: 8px; flex-shrink: 0;}
         .task-card-actions button {
@@ -195,16 +195,26 @@
         .task-card-actions button svg { width: 16px; height: 16px; }
         .task-card-actions .pin-btn.pinned svg { color: #f59e0b; }
 
+        .task-card-description-snippet {
+            font-size: 0.8rem; color: #4b5563; margin-top: 2px; margin-bottom: 6px;
+            white-space: normal; /* Allow wrapping */
+            overflow: hidden; text-overflow: ellipsis;
+            display: -webkit-box; -webkit-line-clamp: 2; /* Show max 2 lines for description snippet */
+            -webkit-box-orient: vertical; line-height: 1.3;
+            max-height: calc(1.3em * 2);
+        }
+
+
         .task-card-minimal-indicators {
             display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
             font-size: 0.75rem; color: #6b7280; margin-top: 6px;
         }
-        .task-due-date-indicator { /* For card summary */
+        .task-due-date-indicator {
             font-size: 0.7rem; padding: 1px 5px; border-radius: 3px;
         }
         .task-due-date-indicator.due-overdue { background-color: #fee2e2; color: #991b1b; }
         .task-due-date-indicator.due-soon { background-color: #fef3c7; color: #92400e; }
-        .priority-indicator-badge { /* For card summary */
+        .priority-indicator-badge {
             padding: 1px 5px; border-radius: 3px; font-weight: 500; font-size: 0.7rem;
             color: white;
         }
@@ -217,18 +227,18 @@
             margin-top: 8px; padding-top: 6px; border-top: 1px solid #f3f4f6;
             display: flex; justify-content: space-between; align-items: center;
         }
-        .task-move-actions { /* Container for move buttons */
+        .task-move-actions {
             display: flex;
-            gap: 6px; /* Space between move buttons */
+            gap: 6px;
         }
         .task-move-actions button {
-            background-color: #f3f4f6; /* Light gray background */
-            border: 1px solid #e5e7eb; /* Light border */
-            padding: 5px; /* Slightly more padding */
+            background-color: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            padding: 5px;
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            width: 28px; height: 28px; /* Slightly larger */
-            border-radius: 6px; /* More rounded */
+            width: 28px; height: 28px;
+            border-radius: 6px;
             transition: background-color 0.2s, border-color 0.2s;
         }
         .task-move-actions button svg { width: 14px; height: 14px; }
@@ -269,7 +279,7 @@
         #task-detail-bottom-sheet-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.5);
-            display: none; /* Hidden by default */
+            display: none;
             z-index: 1040;
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
@@ -289,10 +299,10 @@
             transition: transform 0.3s ease-out;
             z-index: 1050;
             padding: 20px;
-            padding-bottom: 30px; /* Extra space for close button */
-            max-height: 80vh; /* Limit height */
+            padding-bottom: 30px;
+            max-height: 80vh;
             overflow-y: auto;
-            display: none; /* Hidden by default */
+            display: none;
         }
         #task-detail-bottom-sheet.visible {
             display: block;
@@ -306,13 +316,13 @@
             margin-bottom: 10px; font-size: 0.9rem;
         }
         #task-detail-bottom-sheet .detail-item strong {
-            color: #374151; /* Darker gray for labels */
+            color: #374151;
             margin-right: 5px;
         }
         #task-detail-bottom-sheet .detail-item span,
         #task-detail-bottom-sheet .detail-item p {
             color: #4b5563;
-            white-space: pre-wrap; /* For description */
+            white-space: pre-wrap;
             word-break: break-word;
         }
         #task-detail-bottom-sheet .bs-tags-container {
@@ -324,10 +334,10 @@
         }
         #close-bottom-sheet-btn {
             display: block;
-            width: calc(100% - 40px); /* Account for padding */
-            margin: 20px auto 0 auto; /* Centered with top margin */
+            width: calc(100% - 40px);
+            margin: 20px auto 0 auto;
             padding: 12px;
-            background-color: #6b7280; /* Gray */
+            background-color: #6b7280;
             color: white;
             border: none;
             border-radius: 8px;
@@ -405,7 +415,7 @@
             .tasks-container.empty { background-color: transparent; border-width: 1px; }
             .fab-add-task { bottom: 20px; right: 20px; width: 56px; height: 56px; font-size: 24px; line-height: 56px; }
             .actions-bar-container { justify-content: space-between; }
-            #task-detail-bottom-sheet { max-height: 90vh; /* Allow more height on mobile */ }
+            #task-detail-bottom-sheet { max-height: 90vh; }
         }
         @media (min-width: 768px) and (max-width: 1250px) {
             .kanban-board { justify-content: flex-start; gap: 10px; }
@@ -589,7 +599,6 @@
         <div id="bs-task-blocked-status" class="detail-item" style="display: none;"><strong>Trạng thái:</strong> <span class="bs-blocked-text" style="color: #b91c1c; font-weight: bold;">BỊ CHẶN</span></div>
         <div id="bs-task-block-reason" class="detail-item" style="display: none;"><strong>Lý do chặn:</strong> <p></p></div>
         <div id="bs-task-created-at" class="detail-item" style="display: none;"><strong>Ngày tạo:</strong> <span></span></div>
-        {/* Action buttons like Edit, Delete can be added here later */}
         <button id="close-bottom-sheet-btn">Đóng</button>
     </div>
 
@@ -664,7 +673,6 @@
       const closeArchivedModalBtn = document.getElementById('close-archived-modal-btn');
       const archivedTasksList = document.getElementById('archived-tasks-list');
 
-      // Bottom Sheet DOM Elements
       const bottomSheetOverlay = document.getElementById('task-detail-bottom-sheet-overlay');
       const bottomSheet = document.getElementById('task-detail-bottom-sheet');
       const bsTaskTitle = document.getElementById('bs-task-title');
@@ -682,12 +690,11 @@
 
       let draggedTask = null;
       let currentEditingTaskId = null;
-      const TASKS_COLLECTION = 'tasks_kanban_public_v14_bs'; // Updated collection name
+      const TASKS_COLLECTION = 'tasks_kanban_public_v14_bs';
       const priorityMap = { high: 'Cao', medium: 'Trung bình', low: 'Thấp' };
       let currentTaskCounts = { todo: 0, inprogress: 0, done: 0 };
       let allTasks = [];
 
-      // SVG Icons
       const iconPinOutline = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 3.75V16.5L12 14.25L7.5 16.5V3.75m9 0H7.5A2.25 2.25 0 005.25 6v10.5A2.25 2.25 0 007.5 18.75h9A2.25 2.25 0 0018.75 16.5V6A2.25 2.25 0 0016.5 3.75z" /></svg>`;
       const iconPinSolid = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M6.32 2.577a49.255 49.255 0 0111.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 01-1.085.67L12 18.089l-7.165 3.583A.75.75 0 013.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93z" clip-rule="evenodd" /></svg>`;
       const iconMoreVertical = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" /></svg>`;
@@ -783,7 +790,6 @@
       viewArchivedBtn.addEventListener('click', openArchivedTasksModal);
       closeArchivedModalBtn.addEventListener('click', closeArchivedTasksModal);
 
-      // --- Bottom Sheet Logic ---
       function openBottomSheet(taskData) {
         bsTaskTitle.textContent = taskData.title;
         bsTaskDescription.textContent = taskData.description || '(Không có mô tả)';
@@ -799,7 +805,7 @@
             bsTaskDueDate.style.display = 'block';
             const dueDateSpan = bsTaskDueDate.querySelector('span');
             dueDateSpan.textContent = formatDateForDisplay(taskData.dueDate);
-            dueDateSpan.className = 'task-due-date-display'; // Reset classes
+            dueDateSpan.className = ''; // Reset classes for due date span
             const today = getTodayDateString();
             if (taskData.dueDate < today) dueDateSpan.classList.add('due-overdue');
             else {
@@ -864,7 +870,6 @@
           if (event.target == addTaskModal) closeAddTaskModal();
           if (event.target == archivedTasksModal) closeArchivedTasksModal();
           if (event.target == customAlertOverlay) customAlertOverlay.style.display = 'none';
-          // Do not close bottom sheet on overlay click here, handled by its own listener for better control
       };
 
       function updateColumnUI() {
@@ -931,7 +936,7 @@
           const titleText = document.createElement('p');
           titleText.classList.add('task-card-title-text');
           titleText.textContent = taskData.title;
-          // titleText.onclick = () => openEditModal(taskData); // Edit will be in bottom sheet
+          titleText.onclick = () => openEditModal(taskData); // Click title to edit
           cardHeader.appendChild(titleText);
 
           const cardActions = document.createElement('div');
@@ -952,31 +957,29 @@
           cardHeader.appendChild(cardActions);
           taskCard.appendChild(cardHeader);
 
-          // Minimal Indicators (e.g., due date if soon/overdue, priority badge)
+          // Description Snippet
+          if (taskData.description && taskData.description.trim() !== '') {
+            const descSnippet = document.createElement('p');
+            descSnippet.classList.add('task-card-description-snippet');
+            descSnippet.textContent = taskData.description;
+            taskCard.appendChild(descSnippet);
+          }
+
+
+          // Minimal Indicators
           const minimalIndicators = document.createElement('div');
           minimalIndicators.classList.add('task-card-minimal-indicators');
-
           if (taskData.dueDate) {
-              const today = getTodayDateString();
-              const dueDate = taskData.dueDate;
-              let dueDateIndicatorText = '';
-              let dueDateClass = '';
-
+              const today = getTodayDateString(); const dueDate = taskData.dueDate;
+              let dueDateIndicatorText = ''; let dueDateClass = '';
               if (dueDate < today) {
                   dueDateIndicatorText = `Hạn: ${formatDateForDisplay(dueDate)} (Quá hạn)`;
                   dueDateClass = 'due-overdue';
               } else {
                   const todayDate = new Date(today); const dueDateObj = new Date(dueDate);
                   const diffTime = dueDateObj - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  if (diffDays === 0) {
-                      dueDateIndicatorText = "Hạn: Hôm nay";
-                      dueDateClass = 'due-soon';
-                  } else if (diffDays === 1) {
-                      dueDateIndicatorText = "Hạn: Ngày mai";
-                      dueDateClass = 'due-soon';
-                  }
-                  // Optionally, show normal due date if not soon/overdue
-                  // else { dueDateIndicatorText = `Hạn: ${formatDateForDisplay(dueDate)}`; }
+                  if (diffDays === 0) { dueDateIndicatorText = "Hạn: Hôm nay"; dueDateClass = 'due-soon';}
+                  else if (diffDays === 1) { dueDateIndicatorText = "Hạn: Ngày mai"; dueDateClass = 'due-soon';}
               }
               if (dueDateIndicatorText) {
                   const dueDateIndicator = document.createElement('span');
@@ -985,23 +988,19 @@
                   minimalIndicators.appendChild(dueDateIndicator);
               }
           }
-
           const priorityBadge = document.createElement('span');
           priorityBadge.classList.add('priority-indicator-badge', `prio-${taskData.priority || 'medium'}`);
           priorityBadge.textContent = priorityMap[taskData.priority || 'medium'];
           minimalIndicators.appendChild(priorityBadge);
-
           if (minimalIndicators.hasChildNodes()) {
               taskCard.appendChild(minimalIndicators);
           }
-
 
           // Card Footer
           const cardFooter = document.createElement('div');
           cardFooter.classList.add('task-card-footer');
           const moveActions = document.createElement('div');
           moveActions.classList.add('task-move-actions');
-
           if (taskData.status !== 'todo') {
               const moveToTodoBtn = document.createElement('button');
               moveToTodoBtn.innerHTML = iconArrowLeft; moveToTodoBtn.title = "Chuyển sang Cần làm";
@@ -1009,16 +1008,14 @@
               moveToTodoBtn.onclick = (e) => { e.stopPropagation(); updateTaskStatusInFirestore(taskData.id, 'todo', taskData.status); };
               moveActions.appendChild(moveToTodoBtn);
           }
-          // Always show inprogress button unless it's already inprogress
           if (taskData.status !== 'inprogress') {
               const moveToInProgressBtn = document.createElement('button');
-              moveToInProgressBtn.innerHTML = (taskData.status === 'todo') ? iconArrowRight : iconArrowLeft; // Right if from todo, Left if from done
+              moveToInProgressBtn.innerHTML = (taskData.status === 'todo') ? iconArrowRight : iconArrowLeft;
               moveToInProgressBtn.title = "Chuyển sang Đang làm";
               moveToInProgressBtn.classList.add('move-btn-inprogress');
               moveToInProgressBtn.onclick = (e) => { e.stopPropagation(); updateTaskStatusInFirestore(taskData.id, 'inprogress', taskData.status); };
               moveActions.appendChild(moveToInProgressBtn);
           }
-
           if (taskData.status !== 'done') {
               const moveToDoneBtn = document.createElement('button');
               moveToDoneBtn.innerHTML = iconCheck; moveToDoneBtn.title = "Hoàn thành";
@@ -1027,12 +1024,10 @@
               moveActions.appendChild(moveToDoneBtn);
           }
           cardFooter.appendChild(moveActions);
-
           const timestamp = document.createElement('span');
           timestamp.classList.add('task-timestamp');
           timestamp.textContent = taskData.createdAt && taskData.createdAt.toDate ?
             formatDateForDisplay(taskData.createdAt.toDate().toISOString().split('T')[0])
-            // + " " + taskData.createdAt.toDate().toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) // Optionally add time
             : 'N/A';
           cardFooter.appendChild(timestamp);
           taskCard.appendChild(cardFooter);
