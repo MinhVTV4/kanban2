@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Kanban Task (Tailwind CSS - Tối Ưu Giao Diện)</title>
+    <title>Bảng Kanban Task (Tailwind CSS - Tối Ưu Giao Diện V2)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -34,19 +34,10 @@
         .line-clamp-1 { -webkit-line-clamp: 1; }
         .line-clamp-2 { -webkit-line-clamp: 2; }
 
-        .dragging { opacity: 0.5 !important; border: 2px dashed #3b82f6 !important; }
-        .drag-over-column .tasks-container { background-color: #eff6ff !important; border: 1px dashed #93c5fd !important; }
-        .wip-limit-exceeded .tasks-container { border: 2px dashed #ef4444 !important; background-color: #fee2e2 !important; }
+        .dragging { opacity: 0.5 !important; border: 2px dashed #3b82f6 !important; } /* blue-500 */
+        .drag-over-column .tasks-container { background-color: #eff6ff !important; border: 1px dashed #93c5fd !important; } /* blue-50, blue-300 */
+        .wip-limit-exceeded .tasks-container { border: 2px dashed #ef4444 !important; background-color: #fee2e2 !important; } /* red-500, red-100 */
         
-        /* WIP Limit Indicator Text */
-        .column-at-wip-limit .column-header .task-count-badge::after {
-            content: " (WIP Limit!)";
-            color: #ef4444; /* Tailwind red-500 */
-            font-weight: 600; /* semibold */
-            font-size: 0.75rem; /* text-xs */
-            margin-left: 0.25rem; /* ml-1 */
-        }
-
         /* Filter bar transition */
         .filter-bar {
             max-height: 0;
@@ -60,9 +51,9 @@
         .filter-bar.filter-bar-visible {
             max-height: 1000px; 
             opacity: 1;
-            padding-top: 1.25rem; 
+            padding-top: 1.25rem; /* p-5 */
             padding-bottom: 1.25rem;
-            margin-bottom: 1.5rem; 
+            margin-bottom: 1.5rem; /* mb-6 */
         }
 
         /* Bottom Sheet transition */
@@ -87,9 +78,9 @@
               'kanban-inprogress-text': '#d48806',
               'kanban-done': '#f6ffed',
               'kanban-done-text': '#389e0d',
-              'priority-low': '#22c55e',
-              'priority-medium': '#f59e0b',
-              'priority-high': '#ef4444',
+              'priority-low': '#22c55e',    // green-500
+              'priority-medium': '#f59e0b', // amber-500
+              'priority-high': '#ef4444',   // red-500
             }
           }
         }
@@ -97,12 +88,12 @@
     </script>
 </head>
 <body class="bg-slate-100 text-slate-800">
-    <div class="app-container w-full px-2 sm:px-4 md:px-6"> 
-        <header id="app-main-header" class="text-center mb-6">
+    <div class="app-container w-full"> 
+        <header id="app-main-header" class="text-center mb-6 max-w-screen-xl mx-auto px-4 md:px-6">
             <h1 class="text-3xl font-semibold text-sky-600">Ghi chú Kanban</h1>
         </header>
 
-        <div class="actions-bar-container bg-white p-3 md:p-4 rounded-lg shadow mb-6 flex justify-end items-center gap-3 max-w-screen-xl mx-auto"> 
+        <div class="actions-bar-container bg-white p-3 md:p-4 rounded-lg shadow mb-6 flex justify-end items-center gap-3 max-w-screen-xl mx-auto px-4 md:px-6"> 
             <button id="view-archived-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md flex items-center text-sm">
                 <span class="icon mr-2">🗄️</span> Xem Lưu Trữ
             </button>
@@ -111,7 +102,7 @@
             </button>
         </div>
 
-        <div class="filter-bar bg-white rounded-lg shadow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4 items-end max-w-screen-xl mx-auto" id="filter-bar"> 
+        <div class="filter-bar bg-white rounded-lg shadow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4 items-end max-w-screen-xl mx-auto px-4 md:px-6" id="filter-bar"> 
             <div class="form-group"> <label for="search-term-input" class="block text-sm font-medium text-slate-700 mb-1">Tìm theo tiêu đề:</label> <input type="text" id="search-term-input" placeholder="Nhập từ khóa..." class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> </div>
             <div class="form-group"> <label for="filter-priority" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo ưu tiên:</label> <select id="filter-priority" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả ưu tiên</option> <option value="high">Cao</option> <option value="medium">Trung bình</option> <option value="low">Thấp</option> </select> </div>
             <div class="form-group"> <label for="filter-assignee" class="block text-sm font-medium text-slate-700 mb-1">Lọc theo người thực hiện:</label> <select id="filter-assignee" class="w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-sm"> <option value="">Tất cả người thực hiện</option> </select> </div>
@@ -121,7 +112,7 @@
             <div class="actions xl:col-span-full 2xl:col-span-6 flex justify-end gap-3 mt-3 sm:mt-0 sm:self-end"> <button id="apply-filters-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-medium py-2 px-4 rounded-md text-sm">Áp dụng lọc</button> <button id="clear-filters-btn" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md text-sm">Xóa bộ lọc</button> </div>
         </div>
 
-        <div id="kanban-mobile-tabs" class="md:hidden flex bg-white border-b border-slate-200 mb-4 shadow-sm">
+        <div id="kanban-mobile-tabs" class="md:hidden flex bg-white border-b border-slate-200 mb-4 shadow-sm max-w-screen-xl mx-auto">
             <button class="mobile-tab-button flex-1 text-center py-3 px-2 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-sky-600 hover:border-sky-600 transition-colors flex items-center justify-center gap-1.5" id="tab-todo" data-status="todo">
                 <span class="icon">📝</span>Cần làm
             </button>
@@ -135,7 +126,7 @@
 
         <button id="fab-add-task" class="fixed bottom-8 right-8 w-14 h-14 bg-sky-500 hover:bg-sky-600 text-white rounded-full text-3xl flex items-center justify-center shadow-lg z-50" title="Thêm công việc mới">+</button>
 
-        <div class="kanban-board grid grid-cols-1 md:grid-cols-3 gap-4"> 
+        <div class="kanban-board grid grid-cols-1 md:grid-cols-3 gap-4 px-1 sm:px-2"> 
             <div class="kanban-column bg-kanban-todo rounded-lg p-4 shadow-md flex flex-col" id="todo" data-status="todo" data-wip-limit="-1">
                 <div class="column-header flex items-center justify-between mb-4 pb-3 border-b border-rose-200">
                     <span class="title-group flex items-center text-lg font-semibold text-kanban-todo-text">
@@ -551,10 +542,33 @@
               const countBadge = column.querySelector('.task-count-badge');
               const wipLimit = parseInt(column.dataset.wipLimit, 10);
               const currentCount = currentTaskCounts[status] || 0;
-              if (countBadge) countBadge.textContent = currentCount;
-              column.classList.remove('border-red-400', 'bg-red-50'); // Tailwind classes for WIP limit
+              
+              if (countBadge) {
+                countBadge.textContent = currentCount;
+                // Remove existing WIP limit text if present
+                const wipTextNode = Array.from(countBadge.childNodes).find(node => node.nodeType === Node.TEXT_NODE && node.textContent.includes('(WIP Limit!)'));
+                if (wipTextNode) {
+                    countBadge.removeChild(wipTextNode);
+                }
+              }
+              
+              column.classList.remove('border-red-500'); // Tailwind class for WIP limit border
               if (wipLimit !== -1 && currentCount >= wipLimit) {
-                  column.classList.add('border-red-400', 'bg-red-50');
+                  column.classList.add('border-red-500'); // Apply red border to the whole column
+                  if (countBadge && !countBadge.textContent.includes('(WIP Limit!)')) { // Add WIP limit text if not already there
+                     const wipLimitText = document.createElement('span');
+                     wipLimitText.className = 'text-red-500 font-semibold text-xs ml-1';
+                     wipLimitText.textContent = '(WIP Limit!)';
+                     // Insert after the number, but ensure it's not duplicated.
+                     // A simple way is to clear and re-add, or check if it exists.
+                     // For now, let's rely on the CSS ::after for simplicity if that was the original intent,
+                     // or manage this span carefully.
+                     // The CSS ::after rule `.column-at-wip-limit .column-header .task-count-badge::after` handles this.
+                     // So, just ensure `.column-at-wip-limit` is applied to the column.
+                     column.classList.add('column-at-wip-limit');
+                  }
+              } else {
+                column.classList.remove('column-at-wip-limit');
               }
           });
       }
@@ -604,7 +618,7 @@
           const titleText = document.createElement('p');
           titleText.className = 'task-card-title-text text-sm font-semibold text-slate-800 flex-grow cursor-pointer line-clamp-2 leading-tight';
           titleText.textContent = taskData.title;
-          titleText.onclick = () => openEditModal(taskData);
+          titleText.onclick = () => openEditModal(taskData); // Click title to edit
           cardHeader.appendChild(titleText);
 
           const cardActions = document.createElement('div');
@@ -633,9 +647,19 @@
             taskCard.appendChild(descSnippet);
           }
 
-          // Minimal Indicators
+          // Minimal Indicators (Assignee, Due Date, Priority)
           const minimalIndicators = document.createElement('div');
-          minimalIndicators.className = 'task-card-minimal-indicators flex flex-wrap gap-2 items-center text-xs text-slate-500 mt-1.5';
+          minimalIndicators.className = 'task-card-minimal-indicators flex flex-wrap gap-x-3 gap-y-1 items-center text-xs text-slate-500 mt-1.5';
+
+          if (taskData.assignee) {
+              const assigneeIndicator = document.createElement('span');
+              assigneeIndicator.className = 'flex items-center';
+              // Optional: Add an assignee icon
+              // assigneeIndicator.innerHTML = `<svg class="w-3.5 h-3.5 mr-1 text-slate-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>`;
+              assigneeIndicator.appendChild(document.createTextNode(taskData.assignee));
+              minimalIndicators.appendChild(assigneeIndicator);
+          }
+
           if (taskData.dueDate) {
               const today = getTodayDateString(); const dueDate = taskData.dueDate;
               let dueDateIndicatorText = ''; let dueDateClasses = 'task-due-date-indicator px-1.5 py-0.5 rounded text-xs';
@@ -647,6 +671,7 @@
                   const diffTime = dueDateObj - todayDate; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                   if (diffDays === 0) { dueDateIndicatorText = "Hạn: Hôm nay"; dueDateClasses += ' bg-amber-100 text-amber-700';}
                   else if (diffDays === 1) { dueDateIndicatorText = "Hạn: Ngày mai"; dueDateClasses += ' bg-amber-100 text-amber-700';}
+                  // else { dueDateIndicatorText = `Hạn: ${formatDateForDisplay(dueDate)}`; } // Show normal due date if not soon/overdue
               }
               if (dueDateIndicatorText) {
                   const dueDateIndicator = document.createElement('span');
@@ -655,10 +680,12 @@
                   minimalIndicators.appendChild(dueDateIndicator);
               }
           }
+          // Priority badge will be on the right
           const priorityBadge = document.createElement('span');
-          priorityBadge.className = `priority-indicator-badge px-1.5 py-0.5 rounded text-xs text-white bg-priority-${taskData.priority || 'medium'}`;
+          priorityBadge.className = `priority-indicator-badge px-1.5 py-0.5 rounded text-xs text-white bg-priority-${taskData.priority || 'medium'} ml-auto`; // Added ml-auto
           priorityBadge.textContent = priorityMap[taskData.priority || 'medium'];
           minimalIndicators.appendChild(priorityBadge);
+
           if (minimalIndicators.hasChildNodes()) {
               taskCard.appendChild(minimalIndicators);
           }
@@ -667,7 +694,7 @@
           const cardFooter = document.createElement('div');
           cardFooter.className = 'task-card-footer mt-2 pt-1.5 border-t border-slate-200 flex justify-between items-center';
           const moveActions = document.createElement('div');
-          moveActions.className = 'task-move-actions flex gap-1.5';
+          moveActions.className = 'task-move-actions flex gap-1.5'; // Keep gap for move buttons
           if (taskData.status !== 'todo') {
               const moveToTodoBtn = document.createElement('button');
               moveToTodoBtn.innerHTML = iconArrowLeft; moveToTodoBtn.title = "Chuyển sang Cần làm";
